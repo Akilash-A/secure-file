@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
@@ -18,6 +20,8 @@ const DecryptScreenWeb = () => {
   const [decryptionProgress, setDecryptionProgress] = useState(0);
   const [decryptedFile, setDecryptedFile] = useState(null);
   const [showDecryptOptions, setShowDecryptOptions] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewContent, setPreviewContent] = useState('');
 
   // Cleanup on unmount
   useEffect(() => {
@@ -301,31 +305,41 @@ const DecryptScreenWeb = () => {
   const previewDecryptedFile = () => {
     if (!decryptedFile) return;
     
+    console.log('Preview attempt for:', decryptedFile.name, 'Type:', decryptedFile.type);
+    
     // For text files, show a preview
     if (decryptedFile.type.startsWith('text/') || 
         decryptedFile.name.endsWith('.txt') || 
         decryptedFile.name.endsWith('.json') ||
         decryptedFile.name.endsWith('.csv') ||
-        decryptedFile.name.endsWith('.md')) {
+        decryptedFile.name.endsWith('.md') ||
+        decryptedFile.name.endsWith('.html') ||
+        decryptedFile.name.endsWith('.css') ||
+        decryptedFile.name.endsWith('.js')) {
       try {
         // Try to decode as text
-        const text = new TextDecoder('utf-8').decode(decryptedFile.decryptedData);
+        let text;
         
-        // Check if the text is readable (not binary gibberish)
-        const isReadableText = /^[\x20-\x7E\s\n\r\t]*$/.test(text.substring(0, 100));
+        // Try multiple encoding methods
+        try {
+          text = new TextDecoder('utf-8').decode(decryptedFile.decryptedData);
+        } catch (error) {
+          console.log('UTF-8 decode failed, trying latin1:', error);
+          // Fallback to latin1 for some files
+          const bytes = Array.from(decryptedFile.decryptedData);
+          text = bytes.map(byte => String.fromCharCode(byte)).join('');
+        }
+        
+        console.log('Decoded text length:', text.length);
+        console.log('First 100 chars:', text.substring(0, 100));
+        
+        // Check if the text contains mostly printable characters
+        const printableChars = text.replace(/[\x00-\x1F\x7F-\x9F]/g, '').length;
+        const isReadableText = printableChars > text.length * 0.8; // At least 80% printable
         
         if (isReadableText && text.trim().length > 0) {
-          const preview = text.length > 1000 ? text.substring(0, 1000) + '\n\n... (content truncated)' : text;
-          
-          Alert.alert(
-            `Preview: ${decryptedFile.name}`,
-            preview,
-            [
-              { text: 'Close', style: 'cancel' },
-              { text: 'Download Full File', onPress: downloadDecryptedFile }
-            ],
-            { scrollView: true }
-          );
+          setPreviewContent(text);
+          setShowPreview(true);
         } else {
           throw new Error('File content is not readable text');
         }
@@ -333,7 +347,7 @@ const DecryptScreenWeb = () => {
         console.log('Text preview failed:', error);
         Alert.alert(
           'Preview Not Available', 
-          `Cannot preview ${decryptedFile.name}.\n\nThis might be a binary file or the content is not in a readable text format.`,
+          `Cannot preview ${decryptedFile.name}.\n\nThis might be a binary file or the content is not in a readable text format.\n\nError: ${error.message}`,
           [
             { text: 'Cancel', style: 'cancel' },
             { text: 'Download Anyway', onPress: downloadDecryptedFile }
@@ -351,16 +365,31 @@ const DecryptScreenWeb = () => {
         ]
       );
     } else {
-      // For other files, just download
-      Alert.alert(
-        'File Ready',
-        `${decryptedFile.name} has been decrypted.\n\nFile type: ${decryptedFile.type || 'Unknown'}\nSize: ${formatFileSize(decryptedFile.size)}\n\nThis file type cannot be previewed, but you can download it.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Download', onPress: downloadDecryptedFile }
-        ]
-      );
+      // For other files, try to preview as text anyway
+      try {
+        const text = new TextDecoder('utf-8', { fatal: false }).decode(decryptedFile.decryptedData);
+        if (text && text.trim().length > 0) {
+          setPreviewContent(text);
+          setShowPreview(true);
+        } else {
+          throw new Error('No readable content');
+        }
+      } catch (error) {
+        Alert.alert(
+          'File Ready',
+          `${decryptedFile.name} has been decrypted.\n\nFile type: ${decryptedFile.type || 'Unknown'}\nSize: ${formatFileSize(decryptedFile.size)}\n\nThis file type cannot be previewed, but you can download it.`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Download', onPress: downloadDecryptedFile }
+          ]
+        );
+      }
     }
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setPreviewContent('');
   };
 
   const resetDecryption = () => {
