@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import WebIcon from './components/WebIcon';
 
 import HomeScreen from './screens/HomeScreen';
 import EncryptScreen from './screens/EncryptScreen';
@@ -36,7 +36,7 @@ export default function App() {
                   iconName = 'history';
                 }
 
-                return <Icon name={iconName} size={size} color={color} />;
+                return <WebIcon name={iconName} size={size} color={color} />;
               },
               tabBarActiveTintColor: theme.colors.primary,
               tabBarInactiveTintColor: 'gray',
