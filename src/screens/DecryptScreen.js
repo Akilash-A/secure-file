@@ -123,6 +123,57 @@ export default function DecryptScreen() {
     }
   };
 
+  const decryptWithShareCode = async () => {
+    if (!shareCode.trim()) {
+      showSnackbar('Please enter a share code');
+      return;
+    }
+
+    setIsDecrypting(true);
+    setProgress(0);
+
+    try {
+      setProgress(0.2);
+
+      // Get file data using share code
+      const shareData = await getFileByShareCode(shareCode.trim().toUpperCase());
+      
+      setProgress(0.4);
+
+      // Read the encrypted file
+      const fileData = await readEncryptedFile(shareData.filePath);
+      
+      setProgress(0.6);
+
+      // Decrypt the data
+      const decryptedData = await decryptData(
+        fileData.encryptedData,
+        fileData.metadata.key,
+        fileData.metadata.iv
+      );
+
+      setProgress(0.8);
+
+      // Save decrypted file
+      const filePath = await saveDecryptedFile(
+        fileData.metadata.originalName,
+        decryptedData
+      );
+
+      setProgress(1);
+      setDecryptedFilePath(filePath);
+      setFileMetadata(fileData.metadata);
+      showSnackbar('File decrypted successfully with share code!');
+
+    } catch (error) {
+      console.error('Share code decryption error:', error);
+      showSnackbar('Failed to decrypt with share code: ' + error.message);
+    } finally {
+      setIsDecrypting(false);
+      setTimeout(() => setProgress(0), 1000);
+    }
+  };
+
   const shareDecryptedFile = async () => {
     if (decryptedFilePath) {
       try {
@@ -138,6 +189,8 @@ export default function DecryptScreen() {
     setPassword('');
     setDecryptedFilePath(null);
     setFileMetadata(null);
+    setShareCode('');
+    setUseShareCode(false);
     setProgress(0);
   };
 
