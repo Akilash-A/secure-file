@@ -1,0 +1,57 @@
+{
+  "name": "secure-file-transfer-app",
+  "version": "1.0.0",
+  "description": "A secure file transfer app with AES-256 encryption and auto-delete functionality",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+  },
+  "dependencies": {
+    "expo": "~49.0.0",
+    "react": "18.2.0",
+    "react-native": "0.72.6",
+    "react-native-paper": "^5.10.0",
+    "react-native-vector-icons": "^10.0.0",
+    "react-native-document-picker": "^9.0.1",
+    "react-native-fs": "^2.20.0",
+    "react-native-share": "^9.4.1",
+    "react-native-progress": "^5.0.0",
+    "react-native-animatable": "^1.3.3",
+    "expo-crypto": "~12.4.1",
+    "expo-file-system": "~15.4.4",
+    "expo-sharing": "~11.5.0",
+    "expo-document-picker": "~11.5.4",
+    "expo-linear-gradient": "~12.3.0",
+    "react-native-safe-area-context": "4.6.3",
+    "react-navigation": "^4.4.4",
+    "@react-navigation/native": "^6.1.7",
+    "@react-navigation/stack": "^6.3.17",
+    "@react-navigation/bottom-tabs": "^6.5.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "@babel/preset-react": "^7.22.0",
+    "@types/react": "~18.2.0",
+    "@types/react-native": "~0.72.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.32.0",
+    "eslint-plugin-react-native": "^4.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "react-native",
+    "encryption",
+    "file-transfer",
+    "security",
+    "AES-256"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
