@@ -115,7 +115,8 @@ const DecryptScreenWeb = () => {
         originalName,
         mimeType,
         size: decryptedData.length,
-        isTextFile: decrypted.isTextFile
+        isTextFile: decrypted.isTextFile,
+        firstBytes: Array.from(decryptedData.slice(0, 20)).map(b => b.toString(16)).join(' ')
       });
       
       setDecryptedFile(decrypted);
@@ -635,6 +636,72 @@ const DecryptScreenWeb = () => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Preview Modal */}
+      <Modal
+        visible={showPreview}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closePreview}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}>
+            {/* Modal Header */}
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.outline }]}>
+              <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
+                📄 Preview: {decryptedFile?.name}
+              </Text>
+              <TouchableOpacity onPress={closePreview} style={styles.closeButton}>
+                <Text style={[styles.closeButtonText, { color: theme.colors.onSurface }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Preview Content */}
+            <View style={styles.previewContainer}>
+              <ScrollView style={styles.previewScrollView}>
+                <TextInput
+                  style={[styles.previewText, { 
+                    color: theme.colors.onSurface,
+                    backgroundColor: theme.colors.surfaceVariant,
+                  }]}
+                  value={previewContent}
+                  multiline={true}
+                  editable={false}
+                  scrollEnabled={false}
+                />
+              </ScrollView>
+            </View>
+
+            {/* Modal Footer */}
+            <View style={[styles.modalFooter, { borderTopColor: theme.colors.outline }]}>
+              <Text style={[styles.fileInfo, { color: theme.colors.onSurfaceVariant }]}>
+                Size: {decryptedFile ? formatFileSize(decryptedFile.size) : '0'} • Type: {decryptedFile?.type || 'Unknown'}
+              </Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.downloadButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={() => {
+                    closePreview();
+                    downloadDecryptedFile();
+                  }}
+                >
+                  <Text style={[styles.modalButtonText, { color: theme.colors.onPrimary }]}>
+                    📥 Download
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                  onPress={closePreview}
+                >
+                  <Text style={[styles.modalButtonText, { color: theme.colors.onSurfaceVariant }]}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -814,6 +881,93 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     lineHeight: 20,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '90%',
+    maxWidth: 800,
+    height: '80%',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 8,
+    marginLeft: 16,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  previewContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  previewScrollView: {
+    flex: 1,
+  },
+  previewText: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    lineHeight: 20,
+    textAlignVertical: 'top',
+    minHeight: 300,
+  },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+  },
+  fileInfo: {
+    fontSize: 14,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  modalButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  downloadButton: {
+    marginRight: 8,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

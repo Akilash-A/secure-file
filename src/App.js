@@ -18,18 +18,8 @@ function AppContent() {
   const tabs = [
     { name: 'Home', icon: '🏠', component: HomeScreenContent },
     { name: 'Encrypt', icon: '🔒', component: EncryptScreenWeb },
-    { name: 'Decrypt', icon: '�', component: DecryptScreenWeb },
-    { name: 'Receive', icon: '�', component: ReceiveScreenWeb },
-    { name: 'History', icon: '📜', component: () => (
-      <View style={[styles.comingSoon, { backgroundColor: theme.colors.surface }]}>
-        <Text style={[styles.comingSoonText, { color: theme.colors.onSurface }]}>
-          📜 History Screen
-        </Text>
-        <Text style={[styles.comingSoonSubtext, { color: theme.colors.onSurfaceVariant }]}>
-          Coming soon! This will show your encryption history and activities.
-        </Text>
-      </View>
-    ) },
+    { name: 'Decrypt', icon: '🔓', component: DecryptScreenWeb },
+    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb },
     { name: 'Settings', icon: '⚙️', component: SettingsScreen },
   ];
 
@@ -54,7 +44,7 @@ function AppContent() {
         {ActiveComponent && <ActiveComponent />}
       </View>
 
-      {/* Tab Navigation */}
+      {/* Fixed Tab Navigation */}
       <View style={[styles.tabBar, { 
         backgroundColor: theme.colors.surface,
         borderTopColor: theme.colors.outline,
@@ -97,6 +87,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: Platform.OS === 'web' ? '100vh' : '100%',
+    position: 'relative',
   },
   header: {
     flexDirection: 'row',
@@ -104,6 +96,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     paddingTop: Platform.OS === 'web' ? 16 : 40,
+    zIndex: 10,
   },
   headerTitle: {
     fontSize: 20,
@@ -117,30 +110,19 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  comingSoon: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 20,
-    padding: 40,
-    borderRadius: 12,
-  },
-  comingSoonText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  comingSoonSubtext: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
+    paddingBottom: Platform.OS === 'web' ? 80 : 90, // Add padding to account for fixed tab bar
+    overflow: 'hidden',
   },
   tabBar: {
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     borderTopWidth: 1,
     paddingVertical: 8,
+    paddingBottom: Platform.OS === 'web' ? 8 : 20,
+    zIndex: 1000, // High z-index to ensure it stays on top
   },
   tab: {
     flex: 1,
