@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import HomeScreen from './screens/HomeScreen';
 import EncryptScreen from './screens/EncryptScreen';
 import DecryptScreen from './screens/DecryptScreen';
+import ReceiveScreen from './screens/ReceiveScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import { theme } from './theme/theme';
 
@@ -29,6 +30,8 @@ export default function App() {
                   iconName = 'lock';
                 } else if (route.name === 'Decrypt') {
                   iconName = 'lock-open';
+                } else if (route.name === 'Receive') {
+                  iconName = 'download';
                 } else if (route.name === 'History') {
                   iconName = 'history';
                 }
@@ -60,6 +63,11 @@ export default function App() {
               name="Decrypt" 
               component={DecryptScreen} 
               options={{ title: 'Decrypt Files' }}
+            />
+            <Tab.Screen 
+              name="Receive" 
+              component={ReceiveScreen} 
+              options={{ title: 'Receive Files' }}
             />
             <Tab.Screen 
               name="History" 

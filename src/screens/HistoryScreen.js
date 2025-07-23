@@ -29,7 +29,9 @@ import {
   deleteFile, 
   removeFromHistory, 
   shareFile,
-  cleanExpiredFiles 
+  cleanExpiredFiles,
+  getActiveShareCodes,
+  deleteShareCode
 } from '../utils/fileManager';
 import { theme } from '../theme/theme';
 
@@ -41,10 +43,13 @@ export default function HistoryScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [menuVisible, setMenuVisible] = useState({});
+  const [shareCodes, setShareCodes] = useState([]);
+  const [showShareCodes, setShowShareCodes] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       loadHistory();
+      loadShareCodes();
       cleanExpiredFiles();
     }, [])
   );
@@ -62,10 +67,20 @@ export default function HistoryScreen() {
     }
   };
 
+  const loadShareCodes = async () => {
+    try {
+      const codes = await getActiveShareCodes();
+      setShareCodes(codes);
+    } catch (error) {
+      console.error('Failed to load share codes:', error);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await cleanExpiredFiles();
     await loadHistory();
+    await loadShareCodes();
     setRefreshing(false);
   };
 
@@ -258,9 +273,101 @@ export default function HistoryScreen() {
     );
   };
 
+  const renderShareCodeItem = (shareCodeData, index) => {
+    const expiresAt = new Date(shareCodeData.expiresAt);
+    const remainingHours = Math.max(0, Math.floor((expiresAt - new Date()) / (1000 * 60 * 60)));
+    const remainingDownloads = shareCodeData.maxDownloads - shareCodeData.downloadCount;
+    
+    return (
+      <Animatable.View
+        key={shareCodeData.code}
+        animation="fadeInUp"
+        delay={index * 100}
+        duration={600}
+      >
+        <Card style={styles.shareCodeCard}>
+          <Card.Content>
+            <View style={styles.shareCodeHeader}>
+              <View style={styles.shareCodeMain}>
+                <Text style={styles.shareCodeText}>{shareCodeData.code}</Text>
+                <Text style={styles.shareCodeFile}>
+                  {shareCodeData.metadata?.originalName || 'Unknown file'}
+                </Text>
+              </View>
+              <Button
+                mode="text"
+                icon="delete"
+                onPress={() => handleDeleteShareCode(shareCodeData.code)}
+                compact
+                textColor={theme.colors.error}
+              >
+                Delete
+              </Button>
+            </View>
+            
+            <View style={styles.shareCodeFooter}>
+              <View style={styles.shareCodeStats}>
+                <Chip
+                  icon="schedule"
+                  textStyle={{ fontSize: 12 }}
+                  style={[styles.timeChip, { 
+                    backgroundColor: remainingHours < 2 ? theme.colors.warning + '20' : theme.colors.success + '20' 
+                  }]}
+                >
+                  {remainingHours}h left
+                </Chip>
+                <Chip
+                  icon="download"
+                  textStyle={{ fontSize: 12 }}
+                  style={[styles.downloadChip, {
+                    backgroundColor: remainingDownloads < 2 ? theme.colors.warning + '20' : theme.colors.primary + '20'
+                  }]}
+                >
+                  {remainingDownloads} downloads
+                </Chip>
+              </View>
+              <Text style={styles.shareCodeDate}>
+                Created: {formatDate(shareCodeData.createdAt)}
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+      </Animatable.View>
+    );
+  };
+
+  const handleDeleteShareCode = async (shareCode) => {
+    try {
+      await deleteShareCode(shareCode);
+      await loadShareCodes();
+    } catch (error) {
+      console.error('Failed to delete share code:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        {/* Toggle between Files and Share Codes */}
+        <View style={styles.toggleContainer}>
+          <Button
+            mode={!showShareCodes ? "contained" : "outlined"}
+            onPress={() => setShowShareCodes(false)}
+            style={[styles.toggleButton, { marginRight: 8 }]}
+            compact
+          >
+            Files ({filteredFiles.length})
+          </Button>
+          <Button
+            mode={showShareCodes ? "contained" : "outlined"}
+            onPress={() => setShowShareCodes(true)}
+            style={styles.toggleButton}
+            compact
+          >
+            Share Codes ({shareCodes.length})
+          </Button>
+        </View>
+
         <Searchbar
           placeholder="Search files..."
           onChangeText={setSearchQuery}
@@ -286,34 +393,65 @@ export default function HistoryScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {filteredFiles.length === 0 ? (
-          <Animatable.View animation="fadeInUp" duration={800}>
-            <Card style={styles.emptyCard}>
-              <Card.Content style={styles.emptyContent}>
-                <Icon
-                  name="folder-open"
-                  size={64}
-                  color={theme.colors.placeholder}
-                  style={styles.emptyIcon}
-                />
-                <Text style={styles.emptyTitle}>No Files Found</Text>
-                <Text style={styles.emptySubtitle}>
-                  {files.length === 0
-                    ? 'Start encrypting files to see them here'
-                    : 'No files match your current filter'
-                  }
-                </Text>
-              </Card.Content>
-            </Card>
-          </Animatable.View>
+        {!showShareCodes ? (
+          // Files Section
+          filteredFiles.length === 0 ? (
+            <Animatable.View animation="fadeInUp" duration={800}>
+              <Card style={styles.emptyCard}>
+                <Card.Content style={styles.emptyContent}>
+                  <Icon
+                    name="folder-open"
+                    size={64}
+                    color={theme.colors.placeholder}
+                    style={styles.emptyIcon}
+                  />
+                  <Text style={styles.emptyTitle}>No Files Found</Text>
+                  <Text style={styles.emptySubtitle}>
+                    {files.length === 0
+                      ? 'Start encrypting files to see them here'
+                      : 'No files match your current filter'
+                    }
+                  </Text>
+                </Card.Content>
+              </Card>
+            </Animatable.View>
+          ) : (
+            <View>
+              <Text style={styles.resultsText}>
+                {filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''} found
+              </Text>
+              
+              {filteredFiles.map((file, index) => renderFileItem(file, index))}
+            </View>
+          )
         ) : (
-          <View>
-            <Text style={styles.resultsText}>
-              {filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''} found
-            </Text>
-            
-            {filteredFiles.map((file, index) => renderFileItem(file, index))}
-          </View>
+          // Share Codes Section
+          shareCodes.length === 0 ? (
+            <Animatable.View animation="fadeInUp" duration={800}>
+              <Card style={styles.emptyCard}>
+                <Card.Content style={styles.emptyContent}>
+                  <Icon
+                    name="share"
+                    size={64}
+                    color={theme.colors.placeholder}
+                    style={styles.emptyIcon}
+                  />
+                  <Text style={styles.emptyTitle}>No Active Share Codes</Text>
+                  <Text style={styles.emptySubtitle}>
+                    Generate share codes when encrypting files to see them here
+                  </Text>
+                </Card.Content>
+              </Card>
+            </Animatable.View>
+          ) : (
+            <View>
+              <Text style={styles.resultsText}>
+                {shareCodes.length} active share code{shareCodes.length !== 1 ? 's' : ''}
+              </Text>
+              
+              {shareCodes.map((shareCodeData, index) => renderShareCodeItem(shareCodeData, index))}
+            </View>
+          )
         )}
       </ScrollView>
 
@@ -457,5 +595,56 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: theme.colors.primary,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  toggleButton: {
+    flex: 1,
+  },
+  shareCodeCard: {
+    marginVertical: 8,
+    elevation: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.accent,
+  },
+  shareCodeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  shareCodeMain: {
+    flex: 1,
+  },
+  shareCodeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    letterSpacing: 2,
+  },
+  shareCodeFile: {
+    fontSize: 14,
+    color: theme.colors.text,
+    marginTop: 4,
+  },
+  shareCodeFooter: {
+    marginTop: 8,
+  },
+  shareCodeStats: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  timeChip: {
+    alignSelf: 'flex-start',
+  },
+  downloadChip: {
+    alignSelf: 'flex-start',
+  },
+  shareCodeDate: {
+    fontSize: 12,
+    color: theme.colors.placeholder,
   },
 });

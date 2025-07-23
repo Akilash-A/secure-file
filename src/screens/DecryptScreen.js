@@ -450,18 +450,18 @@ export default function DecryptScreen() {
         )}
 
         {/* Decrypt Button */}
-        {selectedFile && password && !decryptedFilePath && (
+        {((selectedFile && password && !useShareCode) || (useShareCode && shareCode.length === 5)) && !decryptedFilePath && (
           <Animatable.View animation="fadeInUp" delay={600} duration={800}>
             <Button
               mode="contained"
-              onPress={decryptFile}
+              onPress={useShareCode ? decryptWithShareCode : decryptFile}
               loading={isDecrypting}
               disabled={isDecrypting}
               icon="lock-open"
               style={styles.decryptButton}
               contentStyle={styles.decryptButtonContent}
             >
-              {isDecrypting ? 'Decrypting...' : 'Decrypt File'}
+              {isDecrypting ? 'Decrypting...' : useShareCode ? 'Decrypt with Code' : 'Decrypt File'}
             </Button>
           </Animatable.View>
         )}
@@ -619,5 +619,34 @@ const styles = StyleSheet.create({
   },
   decryptButtonContent: {
     paddingVertical: 8,
+  },
+  methodToggle: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  methodButton: {
+    flex: 1,
+  },
+  methodContent: {
+    marginTop: 8,
+  },
+  shareCodeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary + '10',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  shareCodeInfoText: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    marginLeft: 8,
+    flex: 1,
+  },
+  successChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colors.success + '20',
+    marginTop: 8,
   },
 });

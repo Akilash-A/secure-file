@@ -25,6 +25,8 @@ A React Native application for encrypted file sharing using military-grade AES-2
 - **File Status**: Monitor active, expired, and auto-delete files
 - **Search & Filter**: Easy file discovery
 - **Sharing Options**: Share encrypted files securely
+- **Share Codes**: Generate unique 5-character codes for secure file sharing
+- **Download/Share**: Multiple options for accessing encrypted files
 
 ## Tech Stack
 
@@ -78,22 +80,35 @@ A React Native application for encrypted file sharing using military-grade AES-2
    - Enable auto-delete
    - Set deletion time in minutes
 5. **Tap "Encrypt File"**
-6. **Share the encrypted file** and password separately
+6. **Choose sharing method**:
+   - **Download**: Save encrypted file locally
+   - **Share File**: Share via system sharing options
+   - **Generate Share Code**: Create a 5-character code for secure sharing
 
 ### Decrypting Files
 
 1. **Navigate to Decrypt tab**
-2. **Select encrypted file** (.secure extension)
-3. **Enter the correct password**
-4. **Tap "Decrypt File"**
-5. **Access your original file**
+2. **Choose decryption method**:
+   - **File + Password**: Select encrypted file and enter password
+   - **Share Code**: Enter 5-character share code
+3. **Tap "Decrypt File" or "Decrypt with Code"**
+4. **Access your original file**
 
-### Managing Files
+### Receiving Shared Files
 
-1. **View History tab** for all encrypted files
-2. **Filter files** by status (active, expired, auto-delete)
-3. **Search files** by name
-4. **Share or delete** files as needed
+1. **Navigate to Receive tab**
+2. **Enter the 5-character share code** you received
+3. **Tap "Receive File"**
+4. **File will be automatically decrypted and available**
+
+### Managing Files and Share Codes
+
+1. **View History tab** for all encrypted files and active share codes
+2. **Toggle between Files and Share Codes** views
+3. **Filter files** by status (active, expired, auto-delete)
+4. **Search files** by name
+5. **Manage share codes**: View remaining time and downloads
+6. **Delete expired or unused share codes**
 
 ## Security Features
 
