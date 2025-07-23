@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from './theme/ThemeContext';
 // Import screen components
 import HomeScreenContent from './screens/HomeScreenContent';
 import EncryptScreenWeb from './screens/EncryptScreenWeb';
+import DecryptScreenWeb from './screens/DecryptScreenWeb';
 import ReceiveScreenWeb from './screens/ReceiveScreenWeb';
 import SettingsScreen from './screens/SettingsScreen';
 
@@ -17,17 +18,8 @@ function AppContent() {
   const tabs = [
     { name: 'Home', icon: '🏠', component: HomeScreenContent },
     { name: 'Encrypt', icon: '🔒', component: EncryptScreenWeb },
-    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb },
-    { name: 'Decrypt', icon: '🔓', component: () => (
-      <View style={[styles.comingSoon, { backgroundColor: theme.colors.surface }]}>
-        <Text style={[styles.comingSoonText, { color: theme.colors.onSurface }]}>
-          🔓 Decrypt Screen
-        </Text>
-        <Text style={[styles.comingSoonSubtext, { color: theme.colors.onSurfaceVariant }]}>
-          Coming soon! This will allow you to decrypt your secured files.
-        </Text>
-      </View>
-    ) },
+    { name: 'Decrypt', icon: '�', component: DecryptScreenWeb },
+    { name: 'Receive', icon: '�', component: ReceiveScreenWeb },
     { name: 'History', icon: '📜', component: () => (
       <View style={[styles.comingSoon, { backgroundColor: theme.colors.surface }]}>
         <Text style={[styles.comingSoonText, { color: theme.colors.onSurface }]}>

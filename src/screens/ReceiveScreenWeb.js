@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,15 @@ const ReceiveScreenWeb = () => {
   const [shareCode, setShareCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [receivedFile, setReceivedFile] = useState(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (receivedFile && receivedFile.downloadUrl) {
+        URL.revokeObjectURL(receivedFile.downloadUrl);
+      }
+    };
+  }, [receivedFile]);
 
   const validateShareCode = (code) => {
     // Share code should be 8 characters, alphanumeric
@@ -44,15 +53,31 @@ const ReceiveScreenWeb = () => {
       setIsLoading(false);
       
       // In a real app, you would make an API call to check if the code exists
-      // For demo purposes, we'll simulate finding a file
+      // For demo purposes, we'll simulate finding a file and create a mock encrypted file
+      
+      // Create a mock encrypted file blob for demo
+      const mockEncryptedContent = new TextEncoder().encode(
+        `ENCRYPTED_FILE_${cleanCode}_${Date.now()}\n` +
+        'This is a demo encrypted file content. In a real application, this would be actual encrypted binary data.\n' +
+        `Original filename: secret-document.pdf\n` +
+        `Encryption algorithm: AES-256-GCM\n` +
+        `Share code: ${cleanCode}\n` +
+        `Encrypted at: ${new Date().toISOString()}\n` +
+        'END_OF_ENCRYPTED_CONTENT'
+      );
+      
+      const encryptedBlob = new Blob([mockEncryptedContent], { type: 'application/octet-stream' });
+      const downloadUrl = URL.createObjectURL(encryptedBlob);
+      
       const mockFile = {
         id: cleanCode,
         name: 'secret-document.pdf.encrypted',
         originalName: 'secret-document.pdf',
-        size: 2048576, // 2MB
+        size: encryptedBlob.size,
         uploadedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
         expiresAt: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(), // 22 hours from now
-        downloadUrl: '#', // In real app, this would be the actual download URL
+        downloadUrl: downloadUrl,
+        blob: encryptedBlob,
       };
 
       setReceivedFile(mockFile);
@@ -64,12 +89,32 @@ const ReceiveScreenWeb = () => {
   };
 
   const downloadFile = () => {
-    if (!receivedFile) return;
+    if (!receivedFile || !receivedFile.downloadUrl) {
+      Alert.alert('Error', 'No file available for download');
+      return;
+    }
     
-    Alert.alert(
-      'Download Started',
-      `Downloading ${receivedFile.originalName}...\n\nNote: You'll need the decryption password to open this file.`
-    );
+    try {
+      // Create download link
+      const link = document.createElement('a');
+      link.href = receivedFile.downloadUrl;
+      
+      // Create a proper filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+      link.download = `${receivedFile.originalName.split('.')[0]}_received_${timestamp}.enc`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      Alert.alert(
+        'Download Started',
+        `Encrypted file "${link.download}" is being downloaded.\n\nNote: This is an encrypted file. You'll need the decryption password and tools to restore the original file.`
+      );
+    } catch (error) {
+      Alert.alert('Download Error', 'Failed to download file: ' + error.message);
+    }
   };
 
   const formatFileSize = (bytes) => {
@@ -97,6 +142,11 @@ const ReceiveScreenWeb = () => {
   };
 
   const resetSearch = () => {
+    // Clean up blob URLs to prevent memory leaks
+    if (receivedFile && receivedFile.downloadUrl) {
+      URL.revokeObjectURL(receivedFile.downloadUrl);
+    }
+    
     setShareCode('');
     setReceivedFile(null);
   };
