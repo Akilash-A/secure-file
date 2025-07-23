@@ -17,15 +17,16 @@ import {
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import WebIcon from '../components/WebIcon';
+import { useTheme } from '../theme/ThemeContext';
 
 import { getFileHistory, cleanExpiredFiles } from '../utils/fileManager';
-import { theme } from '../theme/theme';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
+  const { theme } = useTheme();
   const [recentFiles, setRecentFiles] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [stats, setStats] = useState({
@@ -74,7 +75,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.statValue}>{value}</Text>
             <Text style={styles.statTitle}>{title}</Text>
           </View>
-          <Icon name={icon} size={32} color={color} />
+          <WebIcon name={icon} size={32} color={color} />
         </View>
       </Surface>
     </Animatable.View>
@@ -85,7 +86,7 @@ export default function HomeScreen({ navigation }) {
       <Card style={styles.featureCard} onPress={onPress}>
         <Card.Content style={styles.featureContent}>
           <View style={[styles.featureIcon, { backgroundColor: color + '20' }]}>
-            <Icon name={icon} size={28} color={color} />
+            <WebIcon name={icon} size={28} color={color} />
           </View>
           <View style={styles.featureText}>
             <Text style={styles.featureTitle}>{title}</Text>

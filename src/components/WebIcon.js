@@ -10,6 +10,7 @@ const WebIcon = ({ name, size = 24, color = '#000' }) => {
       'lock-open': '🔓',
       'download': '⬇️',
       'history': '📜',
+      'settings': '⚙️',
       'folder': '📁',
       'share': '📤',
       'delete': '🗑️',
@@ -18,6 +19,11 @@ const WebIcon = ({ name, size = 24, color = '#000' }) => {
       'error': '❌',
       'info': 'ℹ️',
       'warning': '⚠️',
+      'brightness-6': '🌗',
+      'wb-sunny': '☀️',
+      'nights-stay': '🌙',
+      'access-time': '⏰',
+      'plus': '➕',
     };
 
     const icon = iconMap[name] || '📄';
