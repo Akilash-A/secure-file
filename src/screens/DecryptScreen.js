@@ -260,33 +260,91 @@ export default function DecryptScreen() {
           </Card>
         </Animatable.View>
 
-        {/* Password Input */}
+        {/* Decryption Method Selection */}
         <Animatable.View animation="fadeInUp" delay={400} duration={800}>
           <Card style={styles.card}>
             <Card.Content>
               <View style={styles.cardHeader}>
                 <Icon name="vpn-key" size={24} color={theme.colors.primary} />
-                <Text style={styles.cardTitle}>Decryption Password</Text>
+                <Text style={styles.cardTitle}>Decryption Method</Text>
               </View>
 
-              <TextInput
-                label="Enter Password"
-                value={password}
-                onChangeText={setPassword}
-                mode="outlined"
-                secureTextEntry
-                style={styles.input}
-                placeholder="Enter the password used to encrypt this file"
-              />
-
-              {password && (
-                <Chip
-                  icon="info"
-                  textStyle={{ fontSize: 12 }}
-                  style={styles.infoChip}
+              {/* Method Toggle */}
+              <View style={styles.methodToggle}>
+                <Button
+                  mode={!useShareCode ? "contained" : "outlined"}
+                  onPress={() => setUseShareCode(false)}
+                  style={[styles.methodButton, { marginRight: 8 }]}
+                  compact
                 >
-                  Password must match the one used during encryption
-                </Chip>
+                  File + Password
+                </Button>
+                <Button
+                  mode={useShareCode ? "contained" : "outlined"}
+                  onPress={() => setUseShareCode(true)}
+                  style={styles.methodButton}
+                  compact
+                >
+                  Share Code
+                </Button>
+              </View>
+
+              {/* File + Password Method */}
+              {!useShareCode && (
+                <View style={styles.methodContent}>
+                  <TextInput
+                    label="Enter Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    mode="outlined"
+                    secureTextEntry
+                    style={styles.input}
+                    placeholder="Enter the password used to encrypt this file"
+                  />
+
+                  {password && (
+                    <Chip
+                      icon="info"
+                      textStyle={{ fontSize: 12 }}
+                      style={styles.infoChip}
+                    >
+                      Password must match the one used during encryption
+                    </Chip>
+                  )}
+                </View>
+              )}
+
+              {/* Share Code Method */}
+              {useShareCode && (
+                <View style={styles.methodContent}>
+                  <TextInput
+                    label="Enter Share Code"
+                    value={shareCode}
+                    onChangeText={setShareCode}
+                    mode="outlined"
+                    style={styles.input}
+                    placeholder="Enter 5-character share code (e.g., ABC12)"
+                    autoCapitalize="characters"
+                    maxLength={5}
+                  />
+
+                  <View style={styles.shareCodeInfo}>
+                    <Icon name="info" size={16} color={theme.colors.primary} />
+                    <Text style={styles.shareCodeInfoText}>
+                      Share codes are valid for 24 hours and have limited downloads
+                    </Text>
+                  </View>
+
+                  {shareCode && shareCode.length === 5 && (
+                    <Chip
+                      icon="check"
+                      textStyle={{ fontSize: 12 }}
+                      style={styles.successChip}
+                    >
+                      Ready to decrypt with share code
+                    </Chip>
+                  )}
+                </View>
               )}
             </Card.Content>
           </Card>
