@@ -23,7 +23,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { generateKey, generateIV, encryptData, generateSecurePassword } from '../utils/encryption';
-import { saveEncryptedFile, shareFile } from '../utils/fileManager';
+import { saveEncryptedFile, shareFile, createShareCode } from '../utils/fileManager';
 import { theme } from '../theme/theme';
 
 const { width } = Dimensions.get('window');
@@ -39,6 +39,8 @@ export default function EncryptScreen() {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [encryptedFilePath, setEncryptedFilePath] = useState(null);
+  const [shareCode, setShareCode] = useState(null);
+  const [fileMetadata, setFileMetadata] = useState(null);
 
   const pickDocument = async () => {
     try {

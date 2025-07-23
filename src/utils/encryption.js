@@ -108,3 +108,16 @@ export const generateSecurePassword = async (length = 16) => {
   
   return password;
 };
+
+// Generate a unique share code (4-5 character alphanumeric)
+export const generateShareCode = async (length = 5) => {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const randomBytes = await Crypto.getRandomBytesAsync(length);
+  
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += charset[randomBytes[i] % charset.length];
+  }
+  
+  return code;
+};

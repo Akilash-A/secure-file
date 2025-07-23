@@ -87,6 +87,109 @@ export const shareFile = async (filePath) => {
   }
 };
 
+// Create a share link with code
+export const createShareCode = async (filePath, metadata) => {
+  try {
+    const { generateShareCode } = require('./encryption');
+    const shareCode = await generateShareCode();
+    
+    // Store share code mapping
+    const shareKey = 'share_codes';
+    const existingCodes = await AsyncStorage.getItem(shareKey);
+    const codes = existingCodes ? JSON.parse(existingCodes) : {};
+    
+    codes[shareCode] = {
+      filePath: filePath,
+      metadata: metadata,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+      downloadCount: 0,
+      maxDownloads: 5
+    };
+    
+    await AsyncStorage.setItem(shareKey, JSON.stringify(codes));
+    
+    return shareCode;
+  } catch (error) {
+    throw new Error(`Failed to create share code: ${error.message}`);
+  }
+};
+
+// Get file by share code
+export const getFileByShareCode = async (shareCode) => {
+  try {
+    const shareKey = 'share_codes';
+    const existingCodes = await AsyncStorage.getItem(shareKey);
+    const codes = existingCodes ? JSON.parse(existingCodes) : {};
+    
+    const shareData = codes[shareCode.toUpperCase()];
+    if (!shareData) {
+      throw new Error('Invalid share code');
+    }
+    
+    // Check if expired
+    if (new Date() > new Date(shareData.expiresAt)) {
+      throw new Error('Share code has expired');
+    }
+    
+    // Check download limit
+    if (shareData.downloadCount >= shareData.maxDownloads) {
+      throw new Error('Share code has reached maximum downloads');
+    }
+    
+    // Increment download count
+    shareData.downloadCount += 1;
+    codes[shareCode.toUpperCase()] = shareData;
+    await AsyncStorage.setItem(shareKey, JSON.stringify(codes));
+    
+    return shareData;
+  } catch (error) {
+    throw new Error(`Failed to get file by share code: ${error.message}`);
+  }
+};
+
+// Get all active share codes
+export const getActiveShareCodes = async () => {
+  try {
+    const shareKey = 'share_codes';
+    const existingCodes = await AsyncStorage.getItem(shareKey);
+    const codes = existingCodes ? JSON.parse(existingCodes) : {};
+    
+    const activeCodes = [];
+    const now = new Date();
+    
+    for (const [code, data] of Object.entries(codes)) {
+      if (new Date(data.expiresAt) > now && data.downloadCount < data.maxDownloads) {
+        activeCodes.push({
+          code,
+          ...data
+        });
+      }
+    }
+    
+    return activeCodes;
+  } catch (error) {
+    console.error('Failed to get active share codes:', error);
+    return [];
+  }
+};
+
+// Delete share code
+export const deleteShareCode = async (shareCode) => {
+  try {
+    const shareKey = 'share_codes';
+    const existingCodes = await AsyncStorage.getItem(shareKey);
+    const codes = existingCodes ? JSON.parse(existingCodes) : {};
+    
+    delete codes[shareCode.toUpperCase()];
+    await AsyncStorage.setItem(shareKey, JSON.stringify(codes));
+    
+    return true;
+  } catch (error) {
+    throw new Error(`Failed to delete share code: ${error.message}`);
+  }
+};
+
 // File history management
 export const saveFileHistory = async (fileName, filePath, metadata) => {
   try {
