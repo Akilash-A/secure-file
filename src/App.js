@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from './theme/ThemeContext';
 // Import screen components
 import HomeScreenContent from './screens/HomeScreenContent';
 import EncryptScreenWeb from './screens/EncryptScreenWeb';
+import ReceiveScreenWeb from './screens/ReceiveScreenWeb';
 import SettingsScreen from './screens/SettingsScreen';
 
 // Simple tab navigation for web compatibility
@@ -16,6 +17,7 @@ function AppContent() {
   const tabs = [
     { name: 'Home', icon: '🏠', component: HomeScreenContent },
     { name: 'Encrypt', icon: '🔒', component: EncryptScreenWeb },
+    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb },
     { name: 'Decrypt', icon: '🔓', component: () => (
       <View style={[styles.comingSoon, { backgroundColor: theme.colors.surface }]}>
         <Text style={[styles.comingSoonText, { color: theme.colors.onSurface }]}>
