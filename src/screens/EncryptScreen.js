@@ -132,6 +132,7 @@ export default function EncryptScreen() {
 
       setProgress(1);
       setEncryptedFilePath(filePath);
+      setFileMetadata(metadata);
       showSnackbar('File encrypted successfully!');
       
     } catch (error) {
@@ -153,10 +154,35 @@ export default function EncryptScreen() {
     }
   };
 
+  const generateShareCode = async () => {
+    if (encryptedFilePath && fileMetadata) {
+      try {
+        const code = await createShareCode(encryptedFilePath, fileMetadata);
+        setShareCode(code);
+        showSnackbar(`Share code generated: ${code}`);
+      } catch (error) {
+        showSnackbar('Failed to generate share code');
+      }
+    }
+  };
+
+  const downloadFile = async () => {
+    if (encryptedFilePath) {
+      try {
+        await shareFile(encryptedFilePath);
+        showSnackbar('File download started');
+      } catch (error) {
+        showSnackbar('Failed to download file');
+      }
+    }
+  };
+
   const resetForm = () => {
     setSelectedFile(null);
     setPassword('');
     setEncryptedFilePath(null);
+    setShareCode(null);
+    setFileMetadata(null);
     setProgress(0);
   };
 
@@ -329,15 +355,73 @@ export default function EncryptScreen() {
                   <Text style={styles.successTitle}>Encryption Complete!</Text>
                 </View>
                 
-                <View style={styles.actionButtons}>
+                {/* File Actions */}
+                <View style={styles.actionSection}>
+                  <Text style={styles.actionTitle}>Choose an action:</Text>
+                  
+                  <View style={styles.actionButtons}>
+                    <Button
+                      mode="contained"
+                      onPress={downloadFile}
+                      icon="download"
+                      style={[styles.button, styles.downloadButton]}
+                    >
+                      Download
+                    </Button>
+                    <Button
+                      mode="contained"
+                      onPress={shareEncryptedFile}
+                      icon="share"
+                      style={[styles.button, styles.shareButton]}
+                    >
+                      Share File
+                    </Button>
+                  </View>
+                  
+                  <Text style={styles.orText}>— OR —</Text>
+                  
                   <Button
-                    mode="contained"
-                    onPress={shareEncryptedFile}
-                    icon="share"
-                    style={[styles.button, styles.shareButton]}
+                    mode="outlined"
+                    onPress={generateShareCode}
+                    icon="qr-code"
+                    style={[styles.button, styles.codeButton]}
+                    disabled={!!shareCode}
                   >
-                    Share File
+                    {shareCode ? 'Share Code Generated' : 'Generate Share Code'}
                   </Button>
+                </View>
+
+                {/* Share Code Display */}
+                {shareCode && (
+                  <Animatable.View animation="fadeInUp" duration={500}>
+                    <Card style={styles.shareCodeCard}>
+                      <Card.Content>
+                        <View style={styles.shareCodeHeader}>
+                          <Icon name="share" size={24} color={theme.colors.primary} />
+                          <Text style={styles.shareCodeTitle}>Share Code</Text>
+                        </View>
+                        <View style={styles.shareCodeContainer}>
+                          <Text style={styles.shareCodeText}>{shareCode}</Text>
+                        </View>
+                        <Text style={styles.shareCodeInstructions}>
+                          Share this code with the recipient. They can use it in the Decrypt section to access the encrypted file.
+                        </Text>
+                        <View style={styles.shareCodeFeatures}>
+                          <View style={styles.featureItem}>
+                            <Icon name="schedule" size={16} color={theme.colors.placeholder} />
+                            <Text style={styles.featureText}>Valid for 24 hours</Text>
+                          </View>
+                          <View style={styles.featureItem}>
+                            <Icon name="download" size={16} color={theme.colors.placeholder} />
+                            <Text style={styles.featureText}>Max 5 downloads</Text>
+                          </View>
+                        </View>
+                      </Card.Content>
+                    </Card>
+                  </Animatable.View>
+                )}
+                
+                <View style={styles.resetSection}>
                   <Button
                     mode="outlined"
                     onPress={resetForm}
@@ -492,13 +576,96 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 12,
+  },
+  actionSection: {
+    marginTop: 16,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  orText: {
+    textAlign: 'center',
+    color: theme.colors.placeholder,
+    marginVertical: 16,
+    fontSize: 14,
+  },
+  downloadButton: {
+    flex: 1,
+    backgroundColor: theme.colors.success,
+  },
+  shareButton: {
+    flex: 1,
+    backgroundColor: theme.colors.primary,
+  },
+  codeButton: {
+    borderColor: theme.colors.accent,
+    borderWidth: 2,
+  },
+  shareCodeCard: {
+    marginTop: 16,
+    backgroundColor: theme.colors.primary + '10',
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '30',
+  },
+  shareCodeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  shareCodeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginLeft: 8,
+  },
+  shareCodeContainer: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  shareCodeText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 4,
+  },
+  shareCodeInstructions: {
+    fontSize: 14,
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  shareCodeFeatures: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  featureText: {
+    fontSize: 12,
+    color: theme.colors.placeholder,
+    marginLeft: 4,
+  },
+  resetSection: {
+    marginTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.placeholder + '20',
+    paddingTop: 16,
   },
   button: {
     flex: 1,
     marginHorizontal: 4,
-  },
-  shareButton: {
-    backgroundColor: theme.colors.success,
   },
   encryptButton: {
     marginTop: 8,

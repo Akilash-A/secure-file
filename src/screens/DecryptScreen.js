@@ -21,7 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { decryptData } from '../utils/encryption';
-import { readEncryptedFile, saveDecryptedFile, shareFile } from '../utils/fileManager';
+import { readEncryptedFile, saveDecryptedFile, shareFile, getFileByShareCode } from '../utils/fileManager';
 import { theme } from '../theme/theme';
 
 export default function DecryptScreen() {
@@ -33,6 +33,8 @@ export default function DecryptScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [decryptedFilePath, setDecryptedFilePath] = useState(null);
   const [fileMetadata, setFileMetadata] = useState(null);
+  const [shareCode, setShareCode] = useState('');
+  const [useShareCode, setUseShareCode] = useState(false);
 
   const pickEncryptedFile = async () => {
     try {
