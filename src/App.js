@@ -57,12 +57,12 @@ function AppContent() {
   };
 
   const tabs = [
-    { name: 'Home', icon: '🏠', component: HomeScreenContent, gradient: ['#667eea', '#764ba2'] },
-    { name: 'Encrypt', icon: '🔒', component: EncryptScreenWeb, gradient: ['#f093fb', '#f5576c'] },
-    { name: 'Decrypt', icon: '🔓', component: DecryptScreenWeb, gradient: ['#4facfe', '#00f2fe'] },
-    { name: 'Share', icon: '📤', component: ShareScreenWeb, gradient: ['#43e97b', '#38f9d7'] },
-    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb, gradient: ['#fa709a', '#fee140'] },
-    { name: 'Settings', icon: '⚙️', component: SettingsScreen, gradient: ['#a8edea', '#fed6e3'] },
+    { name: 'Home', icon: '🏠', component: HomeScreenContent, gradient: ['#9333ea', '#a855f7'] },
+    { name: 'Encrypt', icon: '🔒', component: EncryptScreenWeb, gradient: ['#8b5cf6', '#a78bfa'] },
+    { name: 'Decrypt', icon: '🔓', component: DecryptScreenWeb, gradient: ['#7c3aed', '#8b5cf6'] },
+    { name: 'Share', icon: '📤', component: ShareScreenWeb, gradient: ['#9333ea', '#a855f7'] },
+    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb, gradient: ['#a855f7', '#c084fc'] },
+    { name: 'Settings', icon: '⚙️', component: SettingsScreen, gradient: ['#c084fc', '#ddd6fe'] },
   ];
 
   const ActiveComponent = tabs.find(tab => tab.name === activeTab)?.component;

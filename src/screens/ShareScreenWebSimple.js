@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Animated, TouchableOpacity, Platform, Text } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import sharedFileStorage from '../utils/sharedFileStorage';
 
 export default function ShareScreenWeb() {
   const { theme, isDarkMode } = useTheme();
@@ -28,7 +29,15 @@ export default function ShareScreenWeb() {
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Load shared files from storage
+    loadSharedFiles();
   }, []);
+
+  const loadSharedFiles = () => {
+    const files = sharedFileStorage.getAllFiles();
+    setSharedFiles(files);
+  };
 
   const expiryOptions = [
     { label: '1 Hour', value: '1h', hours: 1 },
@@ -87,12 +96,20 @@ export default function ShareScreenWeb() {
       expiryDate: expiryDate,
       createdAt: new Date(),
       downloadCount: 0,
+      file: selectedFile.file, // Store the actual file object
     };
 
+    // Store in global storage
+    sharedFileStorage.storeFile(code, sharedFile);
+
+    // Update local state
     setSharedFiles([...sharedFiles, sharedFile]);
     setShareCode(code);
     setCurrentShareCode(code);
     setShowSuccessModal(true);
+
+    // Reload shared files to get updated list
+    loadSharedFiles();
 
     console.log('File shared with code:', code);
   };
@@ -154,11 +171,11 @@ export default function ShareScreenWeb() {
         ]}
       >
         <LinearGradient
-          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(67, 233, 123, 0.1)', 'rgba(56, 249, 215, 0.1)']}
+          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.1)', 'rgba(168, 85, 247, 0.1)']}
           style={styles.headerGradient}
         >
           <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-            ⬆ Share Files
+            📤 Share Files
           </Text>
           <Text style={[styles.headerSubtitle, { color: theme.colors.onSurfaceVariant }]}>
             Share files instantly without encryption using secure codes
@@ -177,7 +194,7 @@ export default function ShareScreenWeb() {
         ]}
       >
         <LinearGradient
-          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(67, 233, 123, 0.05)', 'rgba(56, 249, 215, 0.05)']}
+          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.05)', 'rgba(168, 85, 247, 0.05)']}
           style={styles.sectionCard}
         >
           <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
@@ -191,7 +208,7 @@ export default function ShareScreenWeb() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#43e97b', '#38f9d7']}
+                colors={['#9333ea', '#a855f7']}
                 style={styles.fileSelectGradient}
               >
                 <Text style={styles.fileSelectIcon}>📁</Text>
@@ -200,7 +217,7 @@ export default function ShareScreenWeb() {
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={[styles.selectedFileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(67, 233, 123, 0.1)' }]}>
+            <View style={[styles.selectedFileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
               <View style={styles.fileInfo}>
                 <Text style={styles.fileIcon}>{getFileIcon(selectedFile.name)}</Text>
                 <View style={styles.fileDetails}>
@@ -235,7 +252,7 @@ export default function ShareScreenWeb() {
           ]}
         >
           <LinearGradient
-            colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(67, 233, 123, 0.05)', 'rgba(56, 249, 215, 0.05)']}
+            colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.05)', 'rgba(168, 85, 247, 0.05)']}
             style={styles.sectionCard}
           >
             <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
@@ -250,9 +267,9 @@ export default function ShareScreenWeb() {
                     styles.expiryChip,
                     {
                       backgroundColor: expiryTime === option.value 
-                        ? (isDarkMode ? 'rgba(67, 233, 123, 0.3)' : 'rgba(67, 233, 123, 0.2)')
+                        ? (isDarkMode ? 'rgba(147, 51, 234, 0.3)' : 'rgba(147, 51, 234, 0.2)')
                         : (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
-                      borderColor: expiryTime === option.value ? '#43e97b' : 'transparent',
+                      borderColor: expiryTime === option.value ? '#9333ea' : 'transparent',
                     }
                   ]}
                 >
@@ -260,7 +277,7 @@ export default function ShareScreenWeb() {
                     styles.expiryChipText,
                     { 
                       color: expiryTime === option.value 
-                        ? '#43e97b' 
+                        ? '#9333ea' 
                         : theme.colors.onSurfaceVariant 
                     }
                   ]}>
@@ -290,7 +307,7 @@ export default function ShareScreenWeb() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#43e97b', '#38f9d7']}
+              colors={['#9333ea', '#a855f7']}
               style={styles.shareButtonGradient}
             >
               <Text style={styles.shareButtonText}>🚀 Share File</Text>
@@ -311,7 +328,7 @@ export default function ShareScreenWeb() {
           ]}
         >
           <LinearGradient
-            colors={isDarkMode ? ['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)'] : ['rgba(67, 233, 123, 0.1)', 'rgba(56, 249, 215, 0.05)']}
+            colors={isDarkMode ? ['rgba(147, 51, 234, 0.2)', 'rgba(168, 85, 247, 0.1)'] : ['rgba(147, 51, 234, 0.1)', 'rgba(168, 85, 247, 0.05)']}
             style={styles.successModal}
           >
             <View style={styles.successHeader}>
@@ -324,16 +341,16 @@ export default function ShareScreenWeb() {
               </Text>
             </View>
 
-            <View style={[styles.codeContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(67, 233, 123, 0.1)' }]}>
+            <View style={[styles.codeContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
               <Text style={[styles.codeLabel, { color: theme.colors.onSurfaceVariant }]}>
                 Share Code
               </Text>
-              <Text style={[styles.codeText, { color: '#43e97b' }]}>
+              <Text style={[styles.codeText, { color: '#9333ea' }]}>
                 {currentShareCode}
               </Text>
               <TouchableOpacity 
                 onPress={() => copyToClipboard(currentShareCode)}
-                style={[styles.copyCodeButton, { backgroundColor: '#43e97b' }]}
+                style={[styles.copyCodeButton, { backgroundColor: '#9333ea' }]}
                 activeOpacity={0.8}
               >
                 <Text style={styles.copyCodeButtonText}>📋 Copy Code</Text>
@@ -352,7 +369,7 @@ export default function ShareScreenWeb() {
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.instructionsContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(67, 233, 123, 0.05)' }]}>
+            <View style={[styles.instructionsContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(147, 51, 234, 0.05)' }]}>
               <Text style={[styles.instructionsTitle, { color: theme.colors.onSurface }]}>
                 📝 Instructions:
               </Text>
@@ -379,25 +396,25 @@ export default function ShareScreenWeb() {
           ]}
         >
           <LinearGradient
-            colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(67, 233, 123, 0.05)', 'rgba(56, 249, 215, 0.05)']}
+            colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.05)', 'rgba(168, 85, 247, 0.05)']}
             style={styles.sectionCard}
           >
             <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
               📋 Shared Files
             </Text>
             {sharedFiles.map((file) => (
-              <View key={file.id} style={[styles.sharedFileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(67, 233, 123, 0.1)' }]}>
+              <View key={file.id || file.code} style={[styles.sharedFileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
                 <View style={styles.sharedFileInfo}>
                   <Text style={styles.fileIcon}>{getFileIcon(file.fileName)}</Text>
                   <View style={styles.sharedFileDetails}>
                     <Text style={[styles.sharedFileName, { color: theme.colors.onSurface }]}>
                       {file.fileName}
                     </Text>
-                    <Text style={[styles.sharedFileCode, { color: '#43e97b' }]}>
+                    <Text style={[styles.sharedFileCode, { color: '#9333ea' }]}>
                       Code: {file.code}
                     </Text>
                     <Text style={[styles.sharedFileExpiry, { color: theme.colors.onSurfaceVariant }]}>
-                      Expires: {file.expiryDate.toLocaleDateString()} {file.expiryDate.toLocaleTimeString()}
+                      Expires: {new Date(file.expiryDate).toLocaleDateString()} {new Date(file.expiryDate).toLocaleTimeString()}
                     </Text>
                   </View>
                 </View>
@@ -408,7 +425,7 @@ export default function ShareScreenWeb() {
                       alert('Code copied to clipboard!');
                     }
                   }}
-                  style={[styles.copyButton, { backgroundColor: '#43e97b' }]}
+                  style={[styles.copyButton, { backgroundColor: '#9333ea' }]}
                 >
                   <Text style={styles.copyButtonText}>📋</Text>
                 </TouchableOpacity>

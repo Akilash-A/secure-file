@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import sharedFileStorage from '../utils/sharedFileStorage';
 
 const ReceiveScreenWeb = () => {
   const { theme, isDarkMode } = useTheme();
@@ -73,67 +74,40 @@ const ReceiveScreenWeb = () => {
     setTimeout(() => {
       setIsLoading(false);
       
-      // Determine file type based on code length (demo logic)
+      // Try to get the file from shared storage
+      const sharedFile = sharedFileStorage.getFile(cleanCode);
+      
+      if (!sharedFile) {
+        Alert.alert(
+          'File Not Found', 
+          'No file found with this share code. Please check the code and try again.'
+        );
+        return;
+      }
+
+      // Determine file type based on code length and actual type
       const isEncrypted = cleanCode.length === 8;
       const type = isEncrypted ? 'encrypted' : 'unencrypted';
       setFileType(type);
       
-      let mockFile;
-      
-      if (isEncrypted) {
-        // Create a mock encrypted file
-        const mockEncryptedContent = new TextEncoder().encode(
-          `ENCRYPTED_FILE_${cleanCode}_${Date.now()}\n` +
-          'This is a demo encrypted file content. In a real application, this would be actual encrypted binary data.\n' +
-          `Original filename: secret-document.pdf\n` +
-          `Encryption algorithm: AES-256-GCM\n` +
-          `Share code: ${cleanCode}\n` +
-          `Encrypted at: ${new Date().toISOString()}\n` +
-          'END_OF_ENCRYPTED_CONTENT'
-        );
-        
-        const encryptedBlob = new Blob([mockEncryptedContent], { type: 'application/octet-stream' });
-        const downloadUrl = URL.createObjectURL(encryptedBlob);
-        
-        mockFile = {
-          id: cleanCode,
-          name: 'secret-document.pdf.encrypted',
-          originalName: 'secret-document.pdf',
-          size: encryptedBlob.size,
-          type: 'encrypted',
-          uploadedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          expiresAt: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
-          downloadUrl: downloadUrl,
-          blob: encryptedBlob,
-        };
-      } else {
-        // Create a mock unencrypted file
-        const mockContent = `This is a sample unencrypted file shared with code: ${cleanCode}\n\n` +
-          'Content of the shared file goes here...\n' +
-          'This file was shared without encryption for easy access.\n' +
-          `Shared at: ${new Date().toISOString()}\n` +
-          'You can download this file directly without any decryption needed.';
-        
-        const fileBlob = new Blob([mockContent], { type: 'text/plain' });
-        const downloadUrl = URL.createObjectURL(fileBlob);
-        
-        mockFile = {
-          id: cleanCode,
-          name: 'shared-document.txt',
-          originalName: 'shared-document.txt',
-          size: fileBlob.size,
-          type: 'unencrypted',
-          uploadedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          expiresAt: new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString(),
-          downloadUrl: downloadUrl,
-          blob: fileBlob,
-        };
-      }
+      // Create the file object for display
+      const fileForDisplay = {
+        id: sharedFile.code,
+        name: sharedFile.fileName,
+        originalName: sharedFile.fileName,
+        size: sharedFile.fileSize,
+        type: type,
+        uploadedAt: sharedFile.createdAt.toISOString(),
+        expiresAt: sharedFile.expiryDate.toISOString(),
+        downloadUrl: sharedFile.blobUrl,
+        blob: sharedFile.file,
+        accessCount: sharedFile.accessCount,
+      };
 
-      setReceivedFile(mockFile);
+      setReceivedFile(fileForDisplay);
       Alert.alert(
         'File Found!', 
-        `Found ${type} file: ${mockFile.originalName}\n\nYou can now download it.`
+        `Found ${type} file: ${sharedFile.fileName}\n\nFile size: ${formatFileSize(sharedFile.fileSize)}\n\nYou can now download it.`
       );
     }, 1500);
   };
@@ -149,13 +123,11 @@ const ReceiveScreenWeb = () => {
       const link = document.createElement('a');
       link.href = receivedFile.downloadUrl;
       
-      // Create a proper filename
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+      // Use original filename or create a proper filename
       if (receivedFile.type === 'encrypted') {
-        link.download = `${receivedFile.originalName.split('.')[0]}_received_${timestamp}.enc`;
+        link.download = receivedFile.originalName + '.enc';
       } else {
-        const extension = receivedFile.originalName.split('.').pop();
-        link.download = `${receivedFile.originalName.split('.')[0]}_received_${timestamp}.${extension}`;
+        link.download = receivedFile.originalName;
       }
       
       // Trigger download
