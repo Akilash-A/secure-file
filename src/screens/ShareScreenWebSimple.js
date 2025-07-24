@@ -158,7 +158,7 @@ export default function ShareScreenWeb() {
           style={styles.headerGradient}
         >
           <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-            📤 Share Files
+            ⬆ Share Files
           </Text>
           <Text style={[styles.headerSubtitle, { color: theme.colors.onSurfaceVariant }]}>
             Share files instantly without encryption using secure codes
