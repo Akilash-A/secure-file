@@ -353,66 +353,6 @@ const EncryptScreenWeb = () => {
           </TouchableOpacity>
         )}
 
-        {/* Encryption Options */}
-        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Encryption Settings
-          </Text>
-          
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                🔐 Encryption Algorithm
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                AES-256 (Advanced Encryption Standard)
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                ⏰ Auto-Delete
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                Files will be automatically deleted after 24 hours
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                🔑 Password Protection
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                A secure password will be generated automatically
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Encryption Progress */}
-        {isEncrypting && (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-              Encrypting File...
-            </Text>
-            <View style={[styles.progressBar, { backgroundColor: theme.colors.surfaceVariant }]}>
-              <View 
-                style={[styles.progressFill, { 
-                  backgroundColor: theme.colors.primary,
-                  width: `${encryptionProgress}%`
-                }]} 
-              />
-            </View>
-            <Text style={[styles.progressText, { color: theme.colors.onSurfaceVariant }]}>
-              {encryptionProgress}% Complete
-            </Text>
-          </View>
-        )}
-
         {/* Encryption Success & Options */}
         {showShareOptions && encryptedFile && (
           <View style={[styles.section, { backgroundColor: theme.colors.tertiaryContainer }]}>
@@ -506,6 +446,66 @@ const EncryptScreenWeb = () => {
                 🔄 Encrypt Another File
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Encryption Options */}
+        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Encryption Settings
+          </Text>
+          
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                🔐 Encryption Algorithm
+              </Text>
+              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                AES-256 (Advanced Encryption Standard)
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                ⏰ Auto-Delete
+              </Text>
+              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                Files will be automatically deleted after 24 hours
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                🔑 Password Protection
+              </Text>
+              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                A secure password will be generated automatically
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Encryption Progress */}
+        {isEncrypting && (
+          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              Encrypting File...
+            </Text>
+            <View style={[styles.progressBar, { backgroundColor: theme.colors.surfaceVariant }]}>
+              <View 
+                style={[styles.progressFill, { 
+                  backgroundColor: theme.colors.primary,
+                  width: `${encryptionProgress}%`
+                }]} 
+              />
+            </View>
+            <Text style={[styles.progressText, { color: theme.colors.onSurfaceVariant }]}>
+              {encryptionProgress}% Complete
+            </Text>
           </View>
         )}
 

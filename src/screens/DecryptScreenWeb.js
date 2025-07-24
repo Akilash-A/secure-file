@@ -479,6 +479,23 @@ const DecryptScreenWeb = () => {
           </Text>
         </View>
 
+        {/* Decrypt Button */}
+        {!showDecryptOptions && (
+          <TouchableOpacity
+            style={[styles.encryptButton, { 
+              backgroundColor: selectedFile && !isDecrypting ? theme.colors.primary : theme.colors.surfaceVariant,
+            }]}
+            onPress={decryptFile}
+            disabled={!selectedFile || isDecrypting}
+          >
+            <Text style={[styles.encryptButtonText, { 
+              color: selectedFile && !isDecrypting ? theme.colors.onPrimary : theme.colors.onSurfaceVariant 
+            }]}>
+              {isDecrypting ? '🔄 Decrypting...' : '🔓 Decrypt File'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Decryption Information */}
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
@@ -603,23 +620,6 @@ const DecryptScreenWeb = () => {
               </Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* Decrypt Button */}
-        {!showDecryptOptions && (
-          <TouchableOpacity
-            style={[styles.encryptButton, { 
-              backgroundColor: selectedFile && !isDecrypting ? theme.colors.primary : theme.colors.surfaceVariant,
-            }]}
-            onPress={decryptFile}
-            disabled={!selectedFile || isDecrypting}
-          >
-            <Text style={[styles.encryptButtonText, { 
-              color: selectedFile && !isDecrypting ? theme.colors.onPrimary : theme.colors.onSurfaceVariant 
-            }]}>
-              {isDecrypting ? '🔄 Decrypting...' : '🔓 Decrypt File'}
-            </Text>
-          </TouchableOpacity>
         )}
 
         {/* Security Information */}
