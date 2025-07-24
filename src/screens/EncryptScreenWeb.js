@@ -357,6 +357,18 @@ const EncryptScreenWeb = () => {
           )}
         </View>
 
+        {/* Auto-Delete Message - Only show when file is selected */}
+        {selectedFile && (
+          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              ⏰ Auto-Delete
+            </Text>
+            <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+              Choose when your encrypted file will be automatically deleted
+            </Text>
+          </View>
+        )}
+
         {/* Encrypt Button */}
         {!showShareOptions && (
           <TouchableOpacity
@@ -487,64 +499,57 @@ const EncryptScreenWeb = () => {
             </View>
           </View>
 
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                ⏰ Auto-Delete
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                Choose when your encrypted file will be automatically deleted
-              </Text>
-              
-              {/* Time Selection Options */}
-              <View style={styles.timeOptionsContainer}>
-                {[
-                  { value: '1h', label: '1 Hour', description: 'Quick sharing' },
-                  { value: '6h', label: '6 Hours', description: 'Same day' },
-                  { value: '24h', label: '24 Hours', description: 'Default' },
-                  { value: '7d', label: '7 Days', description: 'Extended' }
-                ].map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.timeOption,
-                      {
-                        backgroundColor: selectedDeleteTime === option.value 
-                          ? theme.colors.primaryContainer 
-                          : theme.colors.surfaceVariant,
-                        borderColor: selectedDeleteTime === option.value 
-                          ? theme.colors.primary 
-                          : theme.colors.outline,
-                      }
-                    ]}
-                    onPress={() => setSelectedDeleteTime(option.value)}
-                  >
-                    <Text style={[
-                      styles.timeOptionLabel,
-                      {
-                        color: selectedDeleteTime === option.value 
-                          ? theme.colors.onPrimaryContainer 
-                          : theme.colors.onSurfaceVariant,
-                        fontWeight: selectedDeleteTime === option.value ? '600' : '400'
-                      }
-                    ]}>
-                      {option.label}
-                    </Text>
-                    <Text style={[
-                      styles.timeOptionDescription,
-                      {
-                        color: selectedDeleteTime === option.value 
-                          ? theme.colors.onPrimaryContainer 
-                          : theme.colors.onSurfaceVariant,
-                      }
-                    ]}>
-                      {option.description}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+          {/* Auto-Delete - Only show when file is selected */}
+          {selectedFile && (
+            <View style={styles.optionRow}>
+              <View style={styles.optionInfo}>
+                <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                  ⏰ Auto-Delete
+                </Text>
+                <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                  Choose when your encrypted file will be automatically deleted
+                </Text>
+                
+                {/* Time Selection Options */}
+                <View style={styles.timeOptionsContainer}>
+                  {[
+                    { value: '1h', label: '1 Hour' },
+                    { value: '6h', label: '6 Hours' },
+                    { value: '24h', label: '24 Hours' },
+                    { value: '7d', label: '7 Days' }
+                  ].map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.timeOption,
+                        {
+                          backgroundColor: selectedDeleteTime === option.value 
+                            ? theme.colors.primaryContainer 
+                            : theme.colors.surfaceVariant,
+                          borderColor: selectedDeleteTime === option.value 
+                            ? theme.colors.primary 
+                            : theme.colors.outline,
+                        }
+                      ]}
+                      onPress={() => setSelectedDeleteTime(option.value)}
+                    >
+                      <Text style={[
+                        styles.timeOptionLabel,
+                        {
+                          color: selectedDeleteTime === option.value 
+                            ? theme.colors.onPrimaryContainer 
+                            : theme.colors.onSurfaceVariant,
+                          fontWeight: selectedDeleteTime === option.value ? '600' : '400'
+                        }
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </View>
-          </View>
+          )}
 
           <View style={styles.optionRow}>
             <View style={styles.optionInfo}>
@@ -804,25 +809,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 12,
-    gap: 8,
+    gap: 10,
   },
   timeOption: {
-    flex: 1,
-    minWidth: '48%',
-    padding: 12,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
     borderWidth: 2,
-    alignItems: 'center',
-    marginBottom: 8,
   },
   timeOptionLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  timeOptionDescription: {
-    fontSize: 12,
-    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 
