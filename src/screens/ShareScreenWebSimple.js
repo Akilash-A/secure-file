@@ -29,15 +29,7 @@ export default function ShareScreenWeb() {
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Load shared files from storage
-    loadSharedFiles();
   }, []);
-
-  const loadSharedFiles = () => {
-    const files = sharedFileStorage.getAllFiles();
-    setSharedFiles(files);
-  };
 
   const expiryOptions = [
     { label: '1 Hour', value: '1h', hours: 1 },
@@ -81,37 +73,35 @@ export default function ShareScreenWeb() {
     const expiryHours = expiryOptions.find(opt => opt.value === expiryTime)?.hours || 24;
     const expiryDate = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
 
-    let blobUrl = '';
-    if (selectedFile.file) {
-      blobUrl = URL.createObjectURL(selectedFile.file);
+    try {
+      // Store the actual file data
+      const success = await sharedFileStorage.storeFile(code, selectedFile, expiryDate);
+      
+      if (success) {
+        const sharedFile = {
+          id: Date.now(),
+          code: code,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          fileType: selectedFile.type,
+          expiryDate: expiryDate,
+          createdAt: new Date(),
+          downloadCount: 0,
+        };
+
+        setSharedFiles([...sharedFiles, sharedFile]);
+        setShareCode(code);
+        setCurrentShareCode(code);
+        setShowSuccessModal(true);
+
+        console.log('File shared with code:', code);
+      } else {
+        alert('Error sharing file. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sharing file:', error);
+      alert('Error sharing file. Please try again.');
     }
-
-    const sharedFile = {
-      id: Date.now(),
-      code: code,
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size,
-      fileType: selectedFile.type,
-      blobUrl: blobUrl,
-      expiryDate: expiryDate,
-      createdAt: new Date(),
-      downloadCount: 0,
-      file: selectedFile.file, // Store the actual file object
-    };
-
-    // Store in global storage
-    sharedFileStorage.storeFile(code, sharedFile);
-
-    // Update local state
-    setSharedFiles([...sharedFiles, sharedFile]);
-    setShareCode(code);
-    setCurrentShareCode(code);
-    setShowSuccessModal(true);
-
-    // Reload shared files to get updated list
-    loadSharedFiles();
-
-    console.log('File shared with code:', code);
   };
 
   const formatFileSize = (bytes) => {
@@ -403,7 +393,7 @@ export default function ShareScreenWeb() {
               📋 Shared Files
             </Text>
             {sharedFiles.map((file) => (
-              <View key={file.id || file.code} style={[styles.sharedFileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
+              <View key={file.id} style={[styles.sharedFileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
                 <View style={styles.sharedFileInfo}>
                   <Text style={styles.fileIcon}>{getFileIcon(file.fileName)}</Text>
                   <View style={styles.sharedFileDetails}>
@@ -414,7 +404,7 @@ export default function ShareScreenWeb() {
                       Code: {file.code}
                     </Text>
                     <Text style={[styles.sharedFileExpiry, { color: theme.colors.onSurfaceVariant }]}>
-                      Expires: {new Date(file.expiryDate).toLocaleDateString()} {new Date(file.expiryDate).toLocaleTimeString()}
+                      Expires: {file.expiryDate.toLocaleDateString()} {file.expiryDate.toLocaleTimeString()}
                     </Text>
                   </View>
                 </View>

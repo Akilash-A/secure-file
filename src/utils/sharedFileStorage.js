@@ -1,103 +1,231 @@
 // Simple in-memory storage for shared files
-// In a real application, this would be stored in a database or cloud storage
+// In a production app, this would be replaced with a backend API
 
 class SharedFileStorage {
   constructor() {
-    this.storage = new Map();
+    // Use localStorage to persist files across browser sessions
+    this.storageKey = 'sharedFiles';
+    this.loadFromStorage();
   }
 
-  // Store a shared file
-  storeFile(code, fileData) {
-    this.storage.set(code.toUpperCase(), {
-      ...fileData,
-      createdAt: new Date(),
-      accessCount: 0,
-    });
-    console.log(`File stored with code: ${code.toUpperCase()}`, fileData);
-  }
-
-  // Retrieve a shared file by code
-  getFile(code) {
-    const file = this.storage.get(code.toUpperCase());
-    if (file) {
-      // Check if file has expired
-      if (new Date() > new Date(file.expiryDate)) {
-        this.storage.delete(code.toUpperCase());
-        return null;
-      }
-      
-      // Increment access count
-      file.accessCount += 1;
-      return file;
-    }
-    return null;
-  }
-
-  // Check if a code exists
-  hasFile(code) {
-    const file = this.storage.get(code.toUpperCase());
-    if (file) {
-      // Check if expired
-      if (new Date() > new Date(file.expiryDate)) {
-        this.storage.delete(code.toUpperCase());
-        return false;
-      }
-      return true;
-    }
-    return false;
-  }
-
-  // Get all active shared files
-  getAllFiles() {
-    const now = new Date();
-    const activeFiles = [];
-    
-    for (const [code, file] of this.storage.entries()) {
-      if (new Date(file.expiryDate) > now) {
-        activeFiles.push({ code, ...file });
+  loadFromStorage() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      if (stored) {
+        const parsedData = JSON.parse(stored);
+        // Convert stored base64 data back to blobs when needed
+        this.files = new Map();
+        Object.entries(parsedData).forEach(([code, fileData]) => {
+          this.files.set(code, fileData);
+        });
       } else {
-        // Clean up expired files
-        this.storage.delete(code);
+        this.files = new Map();
       }
+    } catch (error) {
+      console.error('Error loading from storage:', error);
+      this.files = new Map();
+    }
+  }
+
+  saveToStorage() {
+    try {
+      const dataToStore = {};
+      this.files.forEach((fileData, code) => {
+        // Store everything except the blob (which we'll recreate)
+        const { blob, downloadUrl, ...persistableData } = fileData;
+        dataToStore[code] = persistableData;
+      });
+      localStorage.setItem(this.storageKey, JSON.stringify(dataToStore));
+    } catch (error) {
+      console.error('Error saving to storage:', error);
+    }
+  }
+
+  async storeFile(code, fileData, expiryDate) {
+    try {
+      // Convert file blob to base64 for storage
+      const arrayBuffer = await fileData.file.arrayBuffer();
+      const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      
+      const storedFile = {
+        code: code,
+        fileName: fileData.name,
+        fileSize: fileData.size,
+        fileType: fileData.type,
+        mimeType: fileData.file.type,
+        base64Data: base64Data,
+        expiryDate: expiryDate,
+        createdAt: new Date(),
+        downloadCount: 0,
+        isEncrypted: false, // For unencrypted shares
+      };
+
+      this.files.set(code, storedFile);
+      this.saveToStorage();
+      
+      console.log(`File stored with code: ${code}`);
+      return true;
+    } catch (error) {
+      console.error('Error storing file:', error);
+      return false;
+    }
+  }
+
+  async storeEncryptedFile(code, encryptedData, originalFileName, expiryDate) {
+    try {
+      const storedFile = {
+        code: code,
+        fileName: originalFileName + '.encrypted',
+        originalFileName: originalFileName,
+        fileSize: encryptedData.length,
+        encryptedData: encryptedData, // This is already base64 encoded
+        expiryDate: expiryDate,
+        createdAt: new Date(),
+        downloadCount: 0,
+        isEncrypted: true,
+      };
+
+      this.files.set(code, storedFile);
+      this.saveToStorage();
+      
+      console.log(`Encrypted file stored with code: ${code}`);
+      return true;
+    } catch (error) {
+      console.error('Error storing encrypted file:', error);
+      return false;
+    }
+  }
+
+  getFile(code) {
+    const fileData = this.files.get(code.toUpperCase());
+    
+    if (!fileData) {
+      return null;
+    }
+
+    // Check if file has expired
+    const now = new Date();
+    const expiryDate = new Date(fileData.expiryDate);
+    
+    if (now > expiryDate) {
+      this.files.delete(code.toUpperCase());
+      this.saveToStorage();
+      return null;
+    }
+
+    return fileData;
+  }
+
+  async createDownloadableFile(code) {
+    const fileData = this.getFile(code);
+    
+    if (!fileData) {
+      return null;
+    }
+
+    try {
+      let blob;
+      let fileName;
+
+      if (fileData.isEncrypted) {
+        // Create blob from encrypted data
+        const binaryString = atob(fileData.encryptedData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: 'application/octet-stream' });
+        fileName = fileData.fileName;
+      } else {
+        // Create blob from base64 data
+        const binaryString = atob(fileData.base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: fileData.mimeType || 'application/octet-stream' });
+        fileName = fileData.fileName;
+      }
+
+      const downloadUrl = URL.createObjectURL(blob);
+
+      // Increment download count
+      fileData.downloadCount += 1;
+      this.files.set(code.toUpperCase(), fileData);
+      this.saveToStorage();
+
+      return {
+        ...fileData,
+        blob: blob,
+        downloadUrl: downloadUrl,
+        name: fileName,
+      };
+    } catch (error) {
+      console.error('Error creating downloadable file:', error);
+      return null;
+    }
+  }
+
+  getAllFiles() {
+    const allFiles = [];
+    this.files.forEach((fileData, code) => {
+      // Check if file has expired
+      const now = new Date();
+      const expiryDate = new Date(fileData.expiryDate);
+      
+      if (now <= expiryDate) {
+        allFiles.push(fileData);
+      } else {
+        // Remove expired files
+        this.files.delete(code);
+      }
+    });
+    
+    if (allFiles.length !== this.files.size) {
+      this.saveToStorage(); // Save after removing expired files
     }
     
-    return activeFiles;
+    return allFiles;
   }
 
-  // Remove a file
-  removeFile(code) {
-    const file = this.storage.get(code.toUpperCase());
-    if (file && file.blobUrl) {
-      URL.revokeObjectURL(file.blobUrl);
+  deleteFile(code) {
+    const deleted = this.files.delete(code.toUpperCase());
+    if (deleted) {
+      this.saveToStorage();
     }
-    this.storage.delete(code.toUpperCase());
+    return deleted;
   }
 
-  // Clean up expired files
-  cleanupExpired() {
+  cleanupExpiredFiles() {
     const now = new Date();
-    for (const [code, file] of this.storage.entries()) {
-      if (new Date(file.expiryDate) <= now) {
-        if (file.blobUrl) {
-          URL.revokeObjectURL(file.blobUrl);
-        }
-        this.storage.delete(code);
+    let cleanedCount = 0;
+    
+    this.files.forEach((fileData, code) => {
+      const expiryDate = new Date(fileData.expiryDate);
+      if (now > expiryDate) {
+        this.files.delete(code);
+        cleanedCount++;
       }
+    });
+    
+    if (cleanedCount > 0) {
+      this.saveToStorage();
+      console.log(`Cleaned up ${cleanedCount} expired files`);
     }
-  }
-
-  // Get storage size
-  getStorageSize() {
-    return this.storage.size;
+    
+    return cleanedCount;
   }
 }
 
-// Create a singleton instance
+// Create singleton instance
 const sharedFileStorage = new SharedFileStorage();
 
-// Cleanup expired files every 5 minutes
+// Cleanup expired files on startup
+sharedFileStorage.cleanupExpiredFiles();
+
+// Cleanup expired files every hour
 setInterval(() => {
-  sharedFileStorage.cleanupExpired();
-}, 5 * 60 * 1000);
+  sharedFileStorage.cleanupExpiredFiles();
+}, 60 * 60 * 1000);
 
 export default sharedFileStorage;

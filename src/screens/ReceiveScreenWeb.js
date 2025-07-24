@@ -50,9 +50,9 @@ const ReceiveScreenWeb = () => {
   }, [receivedFile]);
 
   const validateShareCode = (code) => {
-    // Share code should be 6-8 characters, alphanumeric
+    // Allow 6-8 characters, alphanumeric only
     const regex = /^[A-Z0-9]{6,8}$/;
-    return regex.test(code.toUpperCase());
+    return regex.test(code);
   };
 
   const accessSharedFile = async () => {
@@ -70,46 +70,59 @@ const ReceiveScreenWeb = () => {
 
     setIsLoading(true);
 
-    // Simulate API call to retrieve file
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      console.log('Searching for code:', cleanCode);
       
-      // Try to get the file from shared storage
-      const sharedFile = sharedFileStorage.getFile(cleanCode);
+      // Debug: Check what's in storage
+      const allFiles = sharedFileStorage.getAllFiles();
+      console.log('All files in storage:', allFiles);
       
-      if (!sharedFile) {
+      // Try to get the file from storage
+      const fileData = sharedFileStorage.getFile(cleanCode);
+      console.log('File data found:', fileData);
+      
+      if (!fileData) {
+        setIsLoading(false);
+        
+        // Show debug info
+        const storageKeys = Object.keys(localStorage).filter(key => key.includes('shared'));
+        console.log('Storage keys:', storageKeys);
+        
         Alert.alert(
           'File Not Found', 
-          'No file found with this share code. Please check the code and try again.'
+          `The share code "${cleanCode}" is invalid or the file has expired.\n\nDebug info:\n- Files in storage: ${allFiles.length}\n- Storage keys: ${storageKeys.length}`
         );
         return;
       }
 
-      // Determine file type based on code length and actual type
-      const isEncrypted = cleanCode.length === 8;
-      const type = isEncrypted ? 'encrypted' : 'unencrypted';
+      // Determine file type based on the stored data
+      const type = fileData.isEncrypted ? 'encrypted' : 'unencrypted';
       setFileType(type);
-      
-      // Create the file object for display
-      const fileForDisplay = {
-        id: sharedFile.code,
-        name: sharedFile.fileName,
-        originalName: sharedFile.fileName,
-        size: sharedFile.fileSize,
-        type: type,
-        uploadedAt: sharedFile.createdAt.toISOString(),
-        expiresAt: sharedFile.expiryDate.toISOString(),
-        downloadUrl: sharedFile.blobUrl,
-        blob: sharedFile.file,
-        accessCount: sharedFile.accessCount,
-      };
+      console.log('File type:', type);
 
-      setReceivedFile(fileForDisplay);
+      // Create downloadable file
+      const downloadableFile = await sharedFileStorage.createDownloadableFile(cleanCode);
+      console.log('Downloadable file created:', downloadableFile);
+      
+      if (!downloadableFile) {
+        setIsLoading(false);
+        Alert.alert('Error', 'Unable to prepare file for download. Please try again.');
+        return;
+      }
+
+      setIsLoading(false);
+      setReceivedFile(downloadableFile);
+      
       Alert.alert(
         'File Found!', 
-        `Found ${type} file: ${sharedFile.fileName}\n\nFile size: ${formatFileSize(sharedFile.fileSize)}\n\nYou can now download it.`
+        `Found ${type} file: ${downloadableFile.originalFileName || downloadableFile.fileName}\n\nFile size: ${formatFileSize(downloadableFile.fileSize)}\n\nYou can now download it.`
       );
-    }, 1500);
+      
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error accessing shared file:', error);
+      Alert.alert('Error', 'An error occurred while accessing the file. Please try again.\n\nError: ' + error.message);
+    }
   };
 
   const downloadFile = () => {
@@ -123,11 +136,19 @@ const ReceiveScreenWeb = () => {
       const link = document.createElement('a');
       link.href = receivedFile.downloadUrl;
       
-      // Use original filename or create a proper filename
-      if (receivedFile.type === 'encrypted') {
-        link.download = receivedFile.originalName + '.enc';
+      // Use the original filename or stored filename
+      const originalName = receivedFile.originalFileName || receivedFile.fileName;
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+      
+      if (receivedFile.isEncrypted) {
+        // For encrypted files, keep the .encrypted extension
+        link.download = `${originalName}_received_${timestamp}.enc`;
       } else {
-        link.download = receivedFile.originalName;
+        // For unencrypted files, use the original filename with timestamp
+        const nameParts = originalName.split('.');
+        const extension = nameParts.length > 1 ? nameParts.pop() : '';
+        const baseName = nameParts.join('.');
+        link.download = extension ? `${baseName}_received_${timestamp}.${extension}` : `${baseName}_received_${timestamp}`;
       }
       
       // Trigger download
@@ -135,7 +156,7 @@ const ReceiveScreenWeb = () => {
       link.click();
       document.body.removeChild(link);
       
-      const message = receivedFile.type === 'encrypted' 
+      const message = receivedFile.isEncrypted 
         ? `Encrypted file "${link.download}" is being downloaded.\n\nNote: This is an encrypted file. You'll need the decryption password to restore the original file.`
         : `File "${link.download}" is being downloaded.\n\nThis file is ready to use immediately - no decryption needed!`;
       
@@ -170,23 +191,30 @@ const ReceiveScreenWeb = () => {
   };
 
   const resetSearch = () => {
-    if (receivedFile && receivedFile.downloadUrl) {
-      URL.revokeObjectURL(receivedFile.downloadUrl);
-    }
-    
     setShareCode('');
     setReceivedFile(null);
     setFileType(null);
   };
 
-  const getFileTypeIcon = () => {
-    if (!fileType) return '📄';
-    return fileType === 'encrypted' ? '🔒' : '📄';
-  };
-
-  const getFileTypeColor = () => {
-    if (!fileType) return theme.colors.primary;
-    return fileType === 'encrypted' ? '#f093fb' : '#43e97b';
+  const getFileIcon = (fileName) => {
+    if (!fileName) return '📄';
+    const extension = fileName.split('.').pop().toLowerCase();
+    const iconMap = {
+      'pdf': '📄',
+      'doc': '📝',
+      'docx': '📝',
+      'txt': '📄',
+      'jpg': '🖼️',
+      'jpeg': '🖼️',
+      'png': '🖼️',
+      'gif': '🖼️',
+      'mp4': '🎥',
+      'mp3': '🎵',
+      'zip': '📦',
+      'rar': '📦',
+      'encrypted': '🔒',
+    };
+    return iconMap[extension] || '📄';
   };
 
   return (
@@ -205,14 +233,14 @@ const ReceiveScreenWeb = () => {
         ]}
       >
         <LinearGradient
-          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(250, 112, 154, 0.1)', 'rgba(254, 225, 64, 0.1)']}
+          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.1)', 'rgba(168, 85, 247, 0.1)']}
           style={styles.headerGradient}
         >
           <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
             📥 Receive Files
           </Text>
           <Text style={[styles.headerSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Access shared files using secure codes
+            Enter a share code to access and download files
           </Text>
         </LinearGradient>
       </Animated.View>
@@ -228,51 +256,78 @@ const ReceiveScreenWeb = () => {
         ]}
       >
         <LinearGradient
-          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(250, 112, 154, 0.05)', 'rgba(254, 225, 64, 0.05)']}
+          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.05)', 'rgba(168, 85, 247, 0.05)']}
           style={styles.sectionCard}
         >
           <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
             🔑 Enter Share Code
           </Text>
           
-          <View style={[styles.inputContainer, { borderColor: theme.colors.outline }]}>
+          <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.codeInput, { color: theme.colors.onSurface }]}
+              style={[
+                styles.codeInput,
+                {
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)',
+                  color: theme.colors.onSurface,
+                  borderColor: shareCode ? '#9333ea' : theme.colors.outline,
+                }
+              ]}
               value={shareCode}
-              onChangeText={setShareCode}
+              onChangeText={(text) => setShareCode(text.toUpperCase())}
               placeholder="Enter 6-8 character code"
               placeholderTextColor={theme.colors.onSurfaceVariant}
-              autoCapitalize="characters"
               maxLength={8}
+              autoCapitalize="characters"
               autoCorrect={false}
+              editable={!isLoading}
             />
+            
+            <TouchableOpacity 
+              style={[styles.accessButton, { opacity: isLoading ? 0.6 : 1 }]}
+              onPress={accessSharedFile}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#9333ea', '#a855f7']}
+                style={styles.accessButtonGradient}
+              >
+                <Text style={styles.accessButtonText}>
+                  {isLoading ? '🔍 Searching...' : '🔍 Access File'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity 
-            style={[styles.accessButton, { opacity: isLoading ? 0.6 : 1 }]}
-            onPress={accessSharedFile}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#fa709a', '#fee140']}
-              style={styles.accessButtonGradient}
+          <View style={styles.codeHints}>
+            <Text style={[styles.hintText, { color: theme.colors.onSurfaceVariant }]}>
+              💡 Code formats:
+            </Text>
+            <Text style={[styles.hintDetailText, { color: theme.colors.onSurfaceVariant }]}>
+              • 6 characters = Unencrypted file (e.g., ABC123)
+            </Text>
+            <Text style={[styles.hintDetailText, { color: theme.colors.onSurfaceVariant }]}>
+              • 8 characters = Encrypted file (e.g., ABC123XY)
+            </Text>
+            
+            <TouchableOpacity 
+              style={[styles.debugButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}
+              onPress={() => {
+                const allFiles = sharedFileStorage.getAllFiles();
+                const codes = allFiles.map(f => f.code).join(', ');
+                Alert.alert('Debug Info', `Available codes: ${codes || 'No files in storage'}\n\nTotal files: ${allFiles.length}`);
+              }}
             >
-              <Text style={styles.accessButtonText}>
-                {isLoading ? '🔍 Searching...' : '🔍 Access File'}
+              <Text style={[styles.debugButtonText, { color: theme.colors.onSurfaceVariant }]}>
+                🔍 Show Available Codes
               </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <Text style={[styles.helpText, { color: theme.colors.onSurfaceVariant }]}>
-            💡 Enter the code you received to access the shared file.{'\n'}
-            Encrypted files (8 chars) require decryption.{'\n'}
-            Unencrypted files (6 chars) are ready to use.
-          </Text>
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
       </Animated.View>
 
-      {/* File Details */}
+      {/* File Details Section */}
       {receivedFile && (
         <Animated.View
           style={[
@@ -284,65 +339,49 @@ const ReceiveScreenWeb = () => {
           ]}
         >
           <LinearGradient
-            colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(250, 112, 154, 0.05)', 'rgba(254, 225, 64, 0.05)']}
+            colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(147, 51, 234, 0.05)', 'rgba(168, 85, 247, 0.05)']}
             style={styles.sectionCard}
           >
             <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
               📋 File Details
             </Text>
             
-            <View style={[styles.fileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : `${getFileTypeColor()}15` }]}>
+            <View style={[styles.fileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
               <View style={styles.fileHeader}>
-                <View style={[styles.fileIconContainer, { backgroundColor: getFileTypeColor() + '20' }]}>
-                  <Text style={styles.fileIcon}>{getFileTypeIcon()}</Text>
-                </View>
+                <Text style={styles.fileIcon}>
+                  {getFileIcon(receivedFile.originalFileName || receivedFile.fileName)}
+                </Text>
                 <View style={styles.fileInfo}>
                   <Text style={[styles.fileName, { color: theme.colors.onSurface }]}>
-                    {receivedFile.originalName}
+                    {receivedFile.originalFileName || receivedFile.fileName}
                   </Text>
-                  <View style={[styles.fileTypeChip, { backgroundColor: getFileTypeColor() + '20' }]}>
-                    <Text style={[styles.fileTypeText, { color: getFileTypeColor() }]}>
-                      {receivedFile.type === 'encrypted' ? '🔒 Encrypted' : '📄 Unencrypted'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.fileDetails}>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant }]}>Size:</Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.onSurface }]}>
-                    {formatFileSize(receivedFile.size)}
+                  <Text style={[styles.fileSize, { color: theme.colors.onSurfaceVariant }]}>
+                    {formatFileSize(receivedFile.fileSize || receivedFile.size)}
                   </Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant }]}>Shared:</Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.onSurface }]}>
-                    {new Date(receivedFile.uploadedAt).toLocaleDateString()}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant }]}>Expires:</Text>
-                  <Text style={[styles.detailValue, { color: '#ff6b6b' }]}>
-                    {formatTimeRemaining(receivedFile.expiresAt)}
+                <View style={[styles.fileTypeBadge, { 
+                  backgroundColor: receivedFile.isEncrypted ? 'rgba(255, 99, 71, 0.2)' : 'rgba(147, 51, 234, 0.2)' 
+                }]}>
+                  <Text style={[styles.fileTypeText, { 
+                    color: receivedFile.isEncrypted ? '#ff6347' : '#9333ea' 
+                  }]}>
+                    {receivedFile.isEncrypted ? '🔒 Encrypted' : '📖 Unencrypted'}
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.actionButtons}>
+              <View style={styles.fileActions}>
                 <TouchableOpacity 
-                  style={[styles.downloadButton, { backgroundColor: getFileTypeColor() }]}
                   onPress={downloadFile}
+                  style={[styles.downloadButton, { backgroundColor: '#9333ea' }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.downloadButtonText}>
-                    📥 Download {receivedFile.type === 'encrypted' ? 'Encrypted' : 'File'}
-                  </Text>
+                  <Text style={styles.downloadButtonText}>⬇️ Download File</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
-                  style={[styles.resetButton, { borderColor: theme.colors.outline }]}
                   onPress={resetSearch}
+                  style={[styles.resetButton, { borderColor: theme.colors.outline }]}
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.resetButtonText, { color: theme.colors.onSurfaceVariant }]}>
@@ -350,12 +389,24 @@ const ReceiveScreenWeb = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <View style={[styles.fileMetadata, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(147, 51, 234, 0.05)' }]}>
+                <Text style={[styles.metadataText, { color: theme.colors.onSurfaceVariant }]}>
+                  📅 Shared: {new Date(receivedFile.createdAt).toLocaleDateString()}
+                </Text>
+                <Text style={[styles.metadataText, { color: theme.colors.onSurfaceVariant }]}>
+                  ⏰ Expires: {new Date(receivedFile.expiryDate).toLocaleDateString()}
+                </Text>
+                <Text style={[styles.metadataText, { color: theme.colors.onSurfaceVariant }]}>
+                  📊 Downloads: {receivedFile.downloadCount || 0}
+                </Text>
+              </View>
             </View>
           </LinearGradient>
         </Animated.View>
       )}
 
-      {/* Info Section */}
+      {/* Instructions */}
       <Animated.View
         style={[
           styles.sectionContainer,
@@ -366,32 +417,25 @@ const ReceiveScreenWeb = () => {
         ]}
       >
         <LinearGradient
-          colors={isDarkMode ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['rgba(250, 112, 154, 0.05)', 'rgba(254, 225, 64, 0.05)']}
+          colors={isDarkMode ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['rgba(147, 51, 234, 0.03)', 'rgba(168, 85, 247, 0.02)']}
           style={styles.sectionCard}
         >
           <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            ℹ️ How it works
+            📝 How to Use
           </Text>
-          
-          <View style={styles.infoList}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>🔒</Text>
-              <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                <Text style={{ fontWeight: '600' }}>Encrypted Files (8-char codes):</Text> Require decryption after download
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>📄</Text>
-              <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                <Text style={{ fontWeight: '600' }}>Unencrypted Files (6-char codes):</Text> Ready to use immediately
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>⏰</Text>
-              <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                <Text style={{ fontWeight: '600' }}>Auto-Expiry:</Text> All shared files expire automatically for security
-              </Text>
-            </View>
+          <View style={styles.instructionsList}>
+            <Text style={[styles.instructionText, { color: theme.colors.onSurfaceVariant }]}>
+              1. 📨 Get a share code from someone who shared a file
+            </Text>
+            <Text style={[styles.instructionText, { color: theme.colors.onSurfaceVariant }]}>
+              2. 🔤 Enter the code in the field above
+            </Text>
+            <Text style={[styles.instructionText, { color: theme.colors.onSurfaceVariant }]}>
+              3. 🔍 Click "Access File" to verify the code
+            </Text>
+            <Text style={[styles.instructionText, { color: theme.colors.onSurfaceVariant }]}>
+              4. ⬇️ Download the file when ready
+            </Text>
           </View>
         </LinearGradient>
       </Animated.View>
@@ -439,21 +483,22 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   inputContainer: {
-    borderWidth: 2,
-    borderRadius: 15,
-    marginBottom: 15,
+    marginBottom: 20,
   },
   codeInput: {
+    borderWidth: 2,
+    borderRadius: 15,
+    padding: 16,
     fontSize: 18,
     fontWeight: '600',
-    padding: 15,
     textAlign: 'center',
     letterSpacing: 2,
+    marginBottom: 15,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   accessButton: {
-    borderRadius: 15,
+    borderRadius: 25,
     overflow: 'hidden',
-    marginBottom: 15,
   },
   accessButtonGradient: {
     paddingVertical: 16,
@@ -461,14 +506,24 @@ const styles = StyleSheet.create({
   },
   accessButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
-  helpText: {
+  codeHints: {
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 12,
+    backgroundColor: 'rgba(147, 51, 234, 0.05)',
+  },
+  hintText: {
     fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    opacity: 0.8,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  hintDetailText: {
+    fontSize: 13,
+    marginBottom: 4,
+    paddingLeft: 8,
   },
   fileCard: {
     borderRadius: 15,
@@ -477,59 +532,42 @@ const styles = StyleSheet.create({
   fileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
-  },
-  fileIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
+    marginBottom: 20,
   },
   fileIcon: {
-    fontSize: 24,
+    fontSize: 40,
+    marginRight: 15,
   },
   fileInfo: {
     flex: 1,
   },
   fileName: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontWeight: '700',
+    marginBottom: 4,
   },
-  fileTypeChip: {
+  fileSize: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  fileTypeBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 15,
-    alignSelf: 'flex-start',
+    borderRadius: 20,
   },
   fileTypeText: {
     fontSize: 12,
     fontWeight: '600',
   },
-  fileDetails: {
-    marginBottom: 20,
-  },
-  detailRow: {
+  fileActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  actionButtons: {
     gap: 10,
+    marginBottom: 15,
   },
   downloadButton: {
+    flex: 1,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
   },
   downloadButtonText: {
@@ -538,8 +576,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   resetButton: {
+    flex: 1,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     borderWidth: 2,
     alignItems: 'center',
   },
@@ -547,22 +586,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  infoList: {
-    gap: 15,
+  fileMetadata: {
+    padding: 15,
+    borderRadius: 12,
   },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  metadataText: {
+    fontSize: 13,
+    marginBottom: 4,
   },
-  infoIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    marginTop: 2,
+  instructionsList: {
+    gap: 8,
   },
-  infoText: {
-    flex: 1,
+  instructionText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  debugButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  debugButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 

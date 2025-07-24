@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import sharedFileStorage from '../utils/sharedFileStorage';
 
 const EncryptScreenWeb = () => {
   const { theme } = useTheme();
@@ -89,6 +90,7 @@ const EncryptScreenWeb = () => {
         encryptedAt: new Date().toISOString(),
         downloadUrl: encryptedUrl,
         encryptedData: encryptedData,
+        blob: encryptedBlob, // Add the blob property
       };
       
       setEncryptedFile(encrypted);
@@ -158,21 +160,50 @@ const EncryptScreenWeb = () => {
     return encryptedArray;
   };
 
-  const generateShareCode = () => {
+  const generateShareCode = async () => {
+    if (!encryptedFile) {
+      Alert.alert('Error', 'No encrypted file available. Please encrypt a file first.');
+      return;
+    }
+
     // Generate a unique 8-character code
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
     for (let i = 0; i < 8; i++) {
       code += characters.charAt(Math.floor(Math.random() * characters.length));
     }
-    setShareCode(code);
-    
-    // In a real app, you would save this code and file mapping to a server
-    Alert.alert(
-      'Share Code Generated',
-      `Your file share code is: ${code}\n\nAnyone with this code can access your encrypted file. Share it securely!`,
-      [{ text: 'Copy Code', onPress: () => copyToClipboard(code) }]
-    );
+
+    try {
+      // Store the encrypted file in the shared storage
+      // Default to 24 hours expiry for encrypted files
+      const expiryDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      
+      // Convert the encrypted file blob to base64
+      const arrayBuffer = await encryptedFile.blob.arrayBuffer();
+      const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      
+      const success = await sharedFileStorage.storeEncryptedFile(
+        code,
+        base64Data,
+        selectedFile.name,
+        expiryDate
+      );
+
+      if (success) {
+        setShareCode(code);
+        
+        Alert.alert(
+          'Share Code Generated',
+          `Your file share code is: ${code}\n\nAnyone with this code can access your encrypted file. Share it securely!\n\nExpires in 24 hours.`,
+          [{ text: 'Copy Code', onPress: () => copyToClipboard(code) }]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to store encrypted file. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error storing encrypted file:', error);
+      Alert.alert('Error', 'Failed to generate share code. Please try again.');
+    }
   };
 
   const copyToClipboard = (text) => {
