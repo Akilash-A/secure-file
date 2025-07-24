@@ -161,8 +161,16 @@ const EncryptScreenWeb = () => {
   };
 
   const generateShareCode = async () => {
+    console.log('generateShareCode called');
+    console.log('encryptedFile:', encryptedFile);
+    
     if (!encryptedFile) {
       Alert.alert('Error', 'No encrypted file available. Please encrypt a file first.');
+      return;
+    }
+
+    if (!encryptedFile.blob) {
+      Alert.alert('Error', 'Encrypted file data is corrupted. Please encrypt the file again.');
       return;
     }
 
@@ -173,21 +181,27 @@ const EncryptScreenWeb = () => {
       code += characters.charAt(Math.floor(Math.random() * characters.length));
     }
 
+    console.log('Generated code:', code);
+
     try {
       // Store the encrypted file in the shared storage
       // Default to 24 hours expiry for encrypted files
       const expiryDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
       
+      console.log('Converting blob to base64...');
       // Convert the encrypted file blob to base64
       const arrayBuffer = await encryptedFile.blob.arrayBuffer();
       const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       
+      console.log('Storing encrypted file...');
       const success = await sharedFileStorage.storeEncryptedFile(
         code,
         base64Data,
         selectedFile.name,
         expiryDate
       );
+
+      console.log('Storage success:', success);
 
       if (success) {
         setShareCode(code);
@@ -202,7 +216,7 @@ const EncryptScreenWeb = () => {
       }
     } catch (error) {
       console.error('Error storing encrypted file:', error);
-      Alert.alert('Error', 'Failed to generate share code. Please try again.');
+      Alert.alert('Error', 'Failed to generate share code. Please try again.\n\nError: ' + error.message);
     }
   };
 
@@ -425,7 +439,10 @@ const EncryptScreenWeb = () => {
                   flex: 1,
                   marginLeft: 8,
                 }]}
-                onPress={generateShareCode}
+                onPress={() => {
+                  console.log('Share button clicked!');
+                  generateShareCode();
+                }}
               >
                 <Text style={[styles.actionButtonText, { color: theme.colors.onSecondary }]}>
                   🔗 Share
