@@ -366,6 +366,44 @@ const EncryptScreenWeb = () => {
             <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
               Choose when your encrypted file will be automatically deleted
             </Text>
+            
+            {/* Time Selection Options */}
+            <View style={styles.timeOptionsContainer}>
+              {[
+                { value: '1h', label: '1 Hour' },
+                { value: '6h', label: '6 Hours' },
+                { value: '24h', label: '24 Hours' },
+                { value: '7d', label: '7 Days' }
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.timeOption,
+                    {
+                      backgroundColor: selectedDeleteTime === option.value 
+                        ? theme.colors.primaryContainer 
+                        : theme.colors.surfaceVariant,
+                      borderColor: selectedDeleteTime === option.value 
+                        ? theme.colors.primary 
+                        : theme.colors.outline,
+                    }
+                  ]}
+                  onPress={() => setSelectedDeleteTime(option.value)}
+                >
+                  <Text style={[
+                    styles.timeOptionLabel,
+                    {
+                      color: selectedDeleteTime === option.value 
+                        ? theme.colors.onPrimaryContainer 
+                        : theme.colors.onSurfaceVariant,
+                      fontWeight: selectedDeleteTime === option.value ? '600' : '400'
+                    }
+                  ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         )}
 
@@ -498,58 +536,6 @@ const EncryptScreenWeb = () => {
               </Text>
             </View>
           </View>
-
-          {/* Auto-Delete - Only show when file is selected */}
-          {selectedFile && (
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                  ⏰ Auto-Delete
-                </Text>
-                <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                  Choose when your encrypted file will be automatically deleted
-                </Text>
-                
-                {/* Time Selection Options */}
-                <View style={styles.timeOptionsContainer}>
-                  {[
-                    { value: '1h', label: '1 Hour' },
-                    { value: '6h', label: '6 Hours' },
-                    { value: '24h', label: '24 Hours' },
-                    { value: '7d', label: '7 Days' }
-                  ].map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[
-                        styles.timeOption,
-                        {
-                          backgroundColor: selectedDeleteTime === option.value 
-                            ? theme.colors.primaryContainer 
-                            : theme.colors.surfaceVariant,
-                          borderColor: selectedDeleteTime === option.value 
-                            ? theme.colors.primary 
-                            : theme.colors.outline,
-                        }
-                      ]}
-                      onPress={() => setSelectedDeleteTime(option.value)}
-                    >
-                      <Text style={[
-                        styles.timeOptionLabel,
-                        {
-                          color: selectedDeleteTime === option.value 
-                            ? theme.colors.onPrimaryContainer 
-                            : theme.colors.onSurfaceVariant,
-                          fontWeight: selectedDeleteTime === option.value ? '600' : '400'
-                        }
-                      ]}>
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
-          )}
 
           <View style={styles.optionRow}>
             <View style={styles.optionInfo}>
