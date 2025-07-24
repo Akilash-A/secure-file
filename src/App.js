@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import HomeScreenContent from './screens/HomeScreenContent';
 import EncryptScreenWeb from './screens/EncryptScreenWeb';
 import DecryptScreenWeb from './screens/DecryptScreenWeb';
+import ShareScreenWeb from './screens/ShareScreenWebSimple';
 import ReceiveScreenWeb from './screens/ReceiveScreenWeb';
 import SettingsScreen from './screens/SettingsScreen';
 
@@ -59,8 +60,9 @@ function AppContent() {
     { name: 'Home', icon: '🏠', component: HomeScreenContent, gradient: ['#667eea', '#764ba2'] },
     { name: 'Encrypt', icon: '🔒', component: EncryptScreenWeb, gradient: ['#f093fb', '#f5576c'] },
     { name: 'Decrypt', icon: '🔓', component: DecryptScreenWeb, gradient: ['#4facfe', '#00f2fe'] },
-    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb, gradient: ['#43e97b', '#38f9d7'] },
-    { name: 'Settings', icon: '⚙️', component: SettingsScreen, gradient: ['#fa709a', '#fee140'] },
+    { name: 'Share', icon: '📤', component: ShareScreenWeb, gradient: ['#43e97b', '#38f9d7'] },
+    { name: 'Receive', icon: '📥', component: ReceiveScreenWeb, gradient: ['#fa709a', '#fee140'] },
+    { name: 'Settings', icon: '⚙️', component: SettingsScreen, gradient: ['#a8edea', '#fed6e3'] },
   ];
 
   const ActiveComponent = tabs.find(tab => tab.name === activeTab)?.component;

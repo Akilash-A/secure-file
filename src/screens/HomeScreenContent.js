@@ -43,17 +43,24 @@ export default function HomeScreenContent() {
       emoji: '🔓',
     },
     {
-      title: 'Smart Sharing',
-      description: 'Share files with time-limited secure access codes',
+      title: 'Share Files',
+      description: 'Share files instantly without encryption using secure codes',
       icon: 'share',
-      gradient: ['#4facfe', '#00f2fe'],
+      gradient: ['#43e97b', '#38f9d7'],
       emoji: '📤',
+    },
+    {
+      title: 'Smart Sharing',
+      description: 'Receive files with time-limited secure access codes',
+      icon: 'download',
+      gradient: ['#4facfe', '#00f2fe'],
+      emoji: '�',
     },
     {
       title: 'Auto-Delete',
       description: 'Files automatically delete for maximum security',
       icon: 'access-time',
-      gradient: ['#43e97b', '#38f9d7'],
+      gradient: ['#fa709a', '#fee140'],
       emoji: '⏰',
     },
   ];
