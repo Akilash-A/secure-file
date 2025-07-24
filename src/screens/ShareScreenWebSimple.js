@@ -9,6 +9,8 @@ export default function ShareScreenWeb() {
   const [shareCode, setShareCode] = useState('');
   const [expiryTime, setExpiryTime] = useState('24h');
   const [sharedFiles, setSharedFiles] = useState([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [currentShareCode, setCurrentShareCode] = useState('');
   
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(30)).current;
@@ -89,8 +91,9 @@ export default function ShareScreenWeb() {
 
     setSharedFiles([...sharedFiles, sharedFile]);
     setShareCode(code);
+    setCurrentShareCode(code);
+    setShowSuccessModal(true);
 
-    alert(`File shared successfully! Share code: ${code}`);
     console.log('File shared with code:', code);
   };
 
@@ -124,6 +127,15 @@ export default function ShareScreenWeb() {
   const resetForm = () => {
     setSelectedFile(null);
     setShareCode('');
+    setShowSuccessModal(false);
+    setCurrentShareCode('');
+  };
+
+  const copyToClipboard = (text) => {
+    if (Platform.OS === 'web') {
+      navigator.clipboard.writeText(text);
+      alert('Code copied to clipboard!');
+    }
   };
 
   return (
@@ -262,7 +274,7 @@ export default function ShareScreenWeb() {
       )}
 
       {/* Share Button */}
-      {selectedFile && (
+      {selectedFile && !showSuccessModal && (
         <Animated.View
           style={[
             styles.actionContainer,
@@ -284,6 +296,74 @@ export default function ShareScreenWeb() {
               <Text style={styles.shareButtonText}>🚀 Share File</Text>
             </LinearGradient>
           </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <Animated.View
+          style={[
+            styles.successModalContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)'] : ['rgba(67, 233, 123, 0.1)', 'rgba(56, 249, 215, 0.05)']}
+            style={styles.successModal}
+          >
+            <View style={styles.successHeader}>
+              <Text style={styles.successIcon}>🎉</Text>
+              <Text style={[styles.successTitle, { color: theme.colors.onSurface }]}>
+                File Shared Successfully!
+              </Text>
+              <Text style={[styles.successSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                Your file is now available for download
+              </Text>
+            </View>
+
+            <View style={[styles.codeContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(67, 233, 123, 0.1)' }]}>
+              <Text style={[styles.codeLabel, { color: theme.colors.onSurfaceVariant }]}>
+                Share Code
+              </Text>
+              <Text style={[styles.codeText, { color: '#43e97b' }]}>
+                {currentShareCode}
+              </Text>
+              <TouchableOpacity 
+                onPress={() => copyToClipboard(currentShareCode)}
+                style={[styles.copyCodeButton, { backgroundColor: '#43e97b' }]}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.copyCodeButtonText}>📋 Copy Code</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.successActions}>
+              <TouchableOpacity 
+                onPress={resetForm}
+                style={[styles.shareAnotherButton, { borderColor: theme.colors.primary }]}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.shareAnotherButtonText, { color: theme.colors.primary }]}>
+                  📤 Share Another File
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.instructionsContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(67, 233, 123, 0.05)' }]}>
+              <Text style={[styles.instructionsTitle, { color: theme.colors.onSurface }]}>
+                📝 Instructions:
+              </Text>
+              <Text style={[styles.instructionsText, { color: theme.colors.onSurfaceVariant }]}>
+                • Share this code with anyone you want to give access to the file{'\n'}
+                • They can download the file using the "Receive" tab{'\n'}
+                • The file will expire based on your selected time setting{'\n'}
+                • No encryption - files are shared directly for easy access
+              </Text>
+            </View>
+          </LinearGradient>
         </Animated.View>
       )}
 
@@ -516,5 +596,88 @@ const styles = StyleSheet.create({
   },
   copyButtonText: {
     fontSize: 16,
+  },
+  successModalContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  successModal: {
+    borderRadius: 20,
+    padding: 25,
+  },
+  successHeader: {
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  successIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  successSubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  codeContainer: {
+    padding: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  codeLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  codeText: {
+    fontSize: 36,
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    letterSpacing: 4,
+    marginBottom: 15,
+  },
+  copyCodeButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  copyCodeButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  successActions: {
+    marginBottom: 20,
+  },
+  shareAnotherButton: {
+    borderWidth: 2,
+    borderRadius: 25,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  shareAnotherButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  instructionsContainer: {
+    padding: 20,
+    borderRadius: 15,
+  },
+  instructionsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  instructionsText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.9,
   },
 });
