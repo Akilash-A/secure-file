@@ -336,6 +336,23 @@ const EncryptScreenWeb = () => {
           )}
         </View>
 
+        {/* Encrypt Button */}
+        {!showShareOptions && (
+          <TouchableOpacity
+            style={[styles.encryptButton, { 
+              backgroundColor: selectedFile && !isEncrypting ? theme.colors.primary : theme.colors.surfaceVariant,
+            }]}
+            onPress={encryptFile}
+            disabled={!selectedFile || isEncrypting}
+          >
+            <Text style={[styles.encryptButtonText, { 
+              color: selectedFile && !isEncrypting ? theme.colors.onPrimary : theme.colors.onSurfaceVariant 
+            }]}>
+              {isEncrypting ? '🔄 Encrypting...' : '🔒 Encrypt File'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Encryption Options */}
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
@@ -490,23 +507,6 @@ const EncryptScreenWeb = () => {
               </Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* Encrypt Button */}
-        {!showShareOptions && (
-          <TouchableOpacity
-            style={[styles.encryptButton, { 
-              backgroundColor: selectedFile && !isEncrypting ? theme.colors.primary : theme.colors.surfaceVariant,
-            }]}
-            onPress={encryptFile}
-            disabled={!selectedFile || isEncrypting}
-          >
-            <Text style={[styles.encryptButtonText, { 
-              color: selectedFile && !isEncrypting ? theme.colors.onPrimary : theme.colors.onSurfaceVariant 
-            }]}>
-              {isEncrypting ? '🔄 Encrypting...' : '🔒 Encrypt File'}
-            </Text>
-          </TouchableOpacity>
         )}
 
         {/* Security Information */}
