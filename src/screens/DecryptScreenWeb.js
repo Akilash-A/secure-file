@@ -496,66 +496,6 @@ const DecryptScreenWeb = () => {
           </TouchableOpacity>
         )}
 
-        {/* Decryption Information */}
-        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Decryption Process
-          </Text>
-          
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                🔍 Auto-Detection
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                Automatically detects encryption method and file type
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                🔐 Compatible Algorithms
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                Supports AES-256-GCM and fallback decryption methods
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                📄 File Restoration
-              </Text>
-              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                Restores original file name, type, and content
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Decryption Progress */}
-        {isDecrypting && (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-              Decrypting File...
-            </Text>
-            <View style={[styles.progressBar, { backgroundColor: theme.colors.surfaceVariant }]}>
-              <View 
-                style={[styles.progressFill, { 
-                  backgroundColor: theme.colors.primary,
-                  width: `${decryptionProgress}%`
-                }]} 
-              />
-            </View>
-            <Text style={[styles.progressText, { color: theme.colors.onSurfaceVariant }]}>
-              {decryptionProgress}% Complete
-            </Text>
-          </View>
-        )}
-
         {/* Decryption Success & Options */}
         {showDecryptOptions && decryptedFile && (
           <View style={[styles.section, { backgroundColor: theme.colors.tertiaryContainer }]}>
@@ -619,6 +559,66 @@ const DecryptScreenWeb = () => {
                 🔄 Decrypt Another File
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Decryption Information */}
+        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Decryption Process
+          </Text>
+          
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                🔍 Auto-Detection
+              </Text>
+              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                Automatically detects encryption method and file type
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                🔐 Compatible Algorithms
+              </Text>
+              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                Supports AES-256-GCM and fallback decryption methods
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                📄 File Restoration
+              </Text>
+              <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
+                Restores original file name, type, and content
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Decryption Progress */}
+        {isDecrypting && (
+          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              Decrypting File...
+            </Text>
+            <View style={[styles.progressBar, { backgroundColor: theme.colors.surfaceVariant }]}>
+              <View 
+                style={[styles.progressFill, { 
+                  backgroundColor: theme.colors.primary,
+                  width: `${decryptionProgress}%`
+                }]} 
+              />
+            </View>
+            <Text style={[styles.progressText, { color: theme.colors.onSurfaceVariant }]}>
+              {decryptionProgress}% Complete
+            </Text>
           </View>
         )}
 
@@ -926,14 +926,14 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     flex: 1,
-    padding: 20,
+    padding: 8,
   },
   previewScrollView: {
     flex: 1,
   },
   previewText: {
     flex: 1,
-    padding: 16,
+    padding: 12,
     borderRadius: 8,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',

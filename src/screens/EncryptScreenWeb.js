@@ -20,6 +20,7 @@ const EncryptScreenWeb = () => {
   const [encryptedFile, setEncryptedFile] = useState(null);
   const [shareCode, setShareCode] = useState(null);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [selectedDeleteTime, setSelectedDeleteTime] = useState('24h');
 
   const selectFile = async () => {
     if (Platform.OS === 'web') {
@@ -184,9 +185,19 @@ const EncryptScreenWeb = () => {
     console.log('Generated code:', code);
 
     try {
-      // Store the encrypted file in the shared storage
-      // Default to 24 hours expiry for encrypted files
-      const expiryDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      // Calculate expiry date based on selected time
+      const getExpiryTime = (timeSelection) => {
+        const now = Date.now();
+        switch (timeSelection) {
+          case '1h': return now + (1 * 60 * 60 * 1000);
+          case '6h': return now + (6 * 60 * 60 * 1000);
+          case '24h': return now + (24 * 60 * 60 * 1000);
+          case '7d': return now + (7 * 24 * 60 * 60 * 1000);
+          default: return now + (24 * 60 * 60 * 1000);
+        }
+      };
+      
+      const expiryDate = new Date(getExpiryTime(selectedDeleteTime));
       
       console.log('Converting blob to base64...');
       // Convert the encrypted file blob to base64
@@ -206,9 +217,19 @@ const EncryptScreenWeb = () => {
       if (success) {
         setShareCode(code);
         
+        const getTimeDescription = (timeSelection) => {
+          switch (timeSelection) {
+            case '1h': return '1 hour';
+            case '6h': return '6 hours';
+            case '24h': return '24 hours';
+            case '7d': return '7 days';
+            default: return '24 hours';
+          }
+        };
+        
         Alert.alert(
           'Share Code Generated',
-          `Your file share code is: ${code}\n\nAnyone with this code can access your encrypted file. Share it securely!\n\nExpires in 24 hours.`,
+          `Your file share code is: ${code}\n\nAnyone with this code can access your encrypted file. Share it securely!\n\nExpires in ${getTimeDescription(selectedDeleteTime)}.`,
           [{ text: 'Copy Code', onPress: () => copyToClipboard(code) }]
         );
       } else {
@@ -472,8 +493,56 @@ const EncryptScreenWeb = () => {
                 ⏰ Auto-Delete
               </Text>
               <Text style={[styles.optionDescription, { color: theme.colors.onSurfaceVariant }]}>
-                Files will be automatically deleted after 24 hours
+                Choose when your encrypted file will be automatically deleted
               </Text>
+              
+              {/* Time Selection Options */}
+              <View style={styles.timeOptionsContainer}>
+                {[
+                  { value: '1h', label: '1 Hour', description: 'Quick sharing' },
+                  { value: '6h', label: '6 Hours', description: 'Same day' },
+                  { value: '24h', label: '24 Hours', description: 'Default' },
+                  { value: '7d', label: '7 Days', description: 'Extended' }
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.timeOption,
+                      {
+                        backgroundColor: selectedDeleteTime === option.value 
+                          ? theme.colors.primaryContainer 
+                          : theme.colors.surfaceVariant,
+                        borderColor: selectedDeleteTime === option.value 
+                          ? theme.colors.primary 
+                          : theme.colors.outline,
+                      }
+                    ]}
+                    onPress={() => setSelectedDeleteTime(option.value)}
+                  >
+                    <Text style={[
+                      styles.timeOptionLabel,
+                      {
+                        color: selectedDeleteTime === option.value 
+                          ? theme.colors.onPrimaryContainer 
+                          : theme.colors.onSurfaceVariant,
+                        fontWeight: selectedDeleteTime === option.value ? '600' : '400'
+                      }
+                    ]}>
+                      {option.label}
+                    </Text>
+                    <Text style={[
+                      styles.timeOptionDescription,
+                      {
+                        color: selectedDeleteTime === option.value 
+                          ? theme.colors.onPrimaryContainer 
+                          : theme.colors.onSurfaceVariant,
+                      }
+                    ]}>
+                      {option.description}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -730,6 +799,30 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  timeOptionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    gap: 8,
+  },
+  timeOption: {
+    flex: 1,
+    minWidth: '48%',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  timeOptionLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  timeOptionDescription: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
 
