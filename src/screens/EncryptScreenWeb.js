@@ -21,6 +21,7 @@ const EncryptScreenWeb = () => {
   const [shareCode, setShareCode] = useState(null);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [selectedDeleteTime, setSelectedDeleteTime] = useState('24h');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const selectFile = async () => {
     if (Platform.OS === 'web') {
@@ -43,6 +44,37 @@ const EncryptScreenWeb = () => {
       input.click();
     } else {
       Alert.alert('File Selection', 'File picker would open on mobile');
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      setSelectedFile({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uri: URL.createObjectURL(file),
+        file: file
+      });
     }
   };
 
@@ -320,13 +352,19 @@ const EncryptScreenWeb = () => {
           
           <TouchableOpacity
             style={[styles.fileSelector, { 
-              backgroundColor: theme.colors.primaryContainer,
-              borderColor: theme.colors.outline,
+              backgroundColor: isDragOver ? theme.colors.primary : theme.colors.primaryContainer,
+              borderColor: isDragOver ? theme.colors.primary : theme.colors.outline,
+              opacity: isDragOver ? 0.8 : 1,
             }]}
             onPress={selectFile}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
             <Text style={styles.fileSelectorIcon}>📁</Text>
-            <Text style={[styles.fileSelectorText, { color: theme.colors.onPrimaryContainer }]}>
+            <Text style={[styles.fileSelectorText, { 
+              color: isDragOver ? theme.colors.onPrimary : theme.colors.onPrimaryContainer 
+            }]}>
               {selectedFile ? 'Change File' : 'Choose File'}
             </Text>
           </TouchableOpacity>

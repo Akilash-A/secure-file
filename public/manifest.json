@@ -1,0 +1,22 @@
+{
+  "short_name": "Secure File",
+  "name": "Secure File Share",
+  "description": "Secure file sharing with encryption and decryption capabilities",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#9333ea",
+  "background_color": "#9333ea",
+  "orientation": "portrait-primary"
+}
