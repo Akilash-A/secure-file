@@ -1,4 +1,8 @@
-# Secure File Transfer App
+# 🔐 Secure File Transfer App
+
+[![GitHub Repository](https://img.shields.io/badge/GitHub-secure--file-blue?style=flat-square&logo=github)](https://github.com/Akilash-A/secure-file.git)
+[![React Native](https://img.shields.io/badge/React%20Native-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-000020?style=flat-square&logo=expo&logoColor=white)](https://expo.dev/)
 
 A React Native application for encrypted file sharing using military-grade AES-256 encryption with auto-delete functionality.
 
@@ -37,6 +41,32 @@ A React Native application for encrypted file sharing using military-grade AES-2
 - **React Navigation**: Navigation library
 - **Expo Crypto**: Cryptographic utilities
 
+## 🚀 Quick Start
+
+### Get Started in 2 Minutes
+
+1. **Clone and Install**
+   ```bash
+   git clone https://github.com/Akilash-A/secure-file.git
+   cd secure-file
+   npm install
+   ```
+
+2. **Start Development Server**
+   ```bash
+   npm run web
+   ```
+
+3. **Run on Device**
+   - Download [Expo Go](https://expo.dev/client) on your phone
+   - Scan the QR code from terminal
+   - Start encrypting files!
+
+### Alternative Running Methods
+- **Android Emulator**: `npm run android`
+- **iOS Simulator**: `npm run ios`
+- **Web Browser**: `npm run web`
+
 ## Installation
 
 ### Prerequisites
@@ -48,8 +78,8 @@ A React Native application for encrypted file sharing using military-grade AES-2
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd secure-file-transfer-app
+   git clone https://github.com/Akilash-A/secure-file.git
+   cd secure-file
    ```
 
 2. **Install dependencies**
@@ -110,6 +140,27 @@ A React Native application for encrypted file sharing using military-grade AES-2
 5. **Manage share codes**: View remaining time and downloads
 6. **Delete expired or unused share codes**
 
+## 🔒 Security Features
+
+### 🛡️ Enterprise-Grade Encryption
+- **AES-256-GCM**: Military-grade encryption standard
+- **PBKDF2 Key Derivation**: Secure password-based key generation
+- **Crypto.getRandomValues()**: Cryptographically secure random generation
+- **Zero-Knowledge Architecture**: No sensitive data stored unencrypted
+
+### 🔐 Advanced Security Implementations
+- **Secure Authentication**: PBKDF2 hashing with salt
+- **Input Validation**: Comprehensive XSS and injection protection
+- **Rate Limiting**: Protection against brute force attacks
+- **Content Security Policy**: Web-based attack prevention
+- **Secure Storage**: AES-GCM encrypted client-side storage
+
+### 🛠️ Security Utilities
+- **SecureAuth**: Password hashing and verification
+- **SecureStorage**: Encrypted localStorage replacement
+- **Validation**: Input sanitization and validation
+- **Security Headers**: CSP and security configuration
+
 ## Security Features
 
 ### Encryption Details
@@ -159,19 +210,34 @@ The app can encrypt any file type:
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── StatusCards.js   # File status display components
+│   └── WebIcon.js       # Cross-platform icon component
 ├── screens/            # Main app screens
-├── utils/              # Utility functions
-│   ├── encryption.js   # Encryption/decryption logic
-│   └── fileManager.js  # File operations
-└── theme/              # App theme configuration
+│   ├── EncryptScreen.js    # File encryption interface
+│   ├── DecryptScreen.js    # File decryption interface
+│   ├── HistoryScreen.js    # File history management
+│   ├── ReceiveScreen.js    # Share code receiving
+│   └── SettingsScreen.js   # App configuration
+├── utils/              # Utility functions and security
+│   ├── encryption.js       # Core encryption functionality
+│   ├── fileManager.js      # File operations
+│   ├── secureAuth.js       # Secure authentication utilities
+│   ├── secureStorage.js    # Encrypted storage utilities
+│   ├── validation.js       # Input validation and sanitization
+│   └── security.js         # Security configuration and CSP
+├── theme/              # App theme configuration
+│   ├── theme.js            # Material Design theme
+│   └── ThemeContext.js     # Theme context provider
+└── polyfills/          # Cross-platform compatibility
+    └── *.js                # React Native Web polyfills
 ```
 
-### Key Files
-- `src/utils/encryption.js`: Core encryption functionality
-- `src/utils/fileManager.js`: File storage and management
-- `src/screens/EncryptScreen.js`: File encryption interface
-- `src/screens/DecryptScreen.js`: File decryption interface
-- `src/screens/HistoryScreen.js`: File history management
+### 🔧 Key Security Files
+- `src/utils/secureAuth.js`: PBKDF2 authentication and password security
+- `src/utils/secureStorage.js`: AES-GCM encrypted storage implementation
+- `src/utils/validation.js`: Input validation and XSS protection
+- `src/utils/security.js`: Content Security Policy and headers
+- `src/utils/encryption.js`: Core AES-256 encryption with secure random generation
 
 ### Adding Features
 
@@ -224,22 +290,85 @@ src/
 - **Multiple Files**: Process files one at a time
 - **Storage**: Regularly clean up old files
 
-## Contributing
+## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+We welcome contributions! Here's how to get started:
 
-## License
+### Development Setup
+1. **Fork the repository** on [GitHub](https://github.com/Akilash-A/secure-file.git)
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/secure-file.git
+   cd secure-file
+   ```
+3. **Create a feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+4. **Install dependencies**
+   ```bash
+   npm install
+   ```
+5. **Start development server**
+   ```bash
+   npm start
+   ```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Making Changes
+1. Make your changes following the coding standards
+2. Test your changes thoroughly
+3. Add tests if applicable
+4. Ensure security best practices are followed
+5. Update documentation if needed
 
-## Support
+### Submitting Changes
+1. **Commit your changes**
+   ```bash
+   git commit -m "feat: add amazing feature"
+   ```
+2. **Push to your fork**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+3. **Create a Pull Request** on GitHub
 
-For support, please open an issue in the GitHub repository or contact the development team.
+### Contribution Guidelines
+- Follow existing code style and patterns
+- Maintain security standards and practices
+- Add appropriate tests for new features
+- Update documentation for user-facing changes
+- Ensure cross-platform compatibility
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support & Contact
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/Akilash-A/secure-file/issues)
+- **GitHub Repository**: [https://github.com/Akilash-A/secure-file.git](https://github.com/Akilash-A/secure-file.git)
+- **Discussions**: [GitHub Discussions](https://github.com/Akilash-A/secure-file/discussions)
+
+### Getting Help
+1. **Check existing issues** on GitHub
+2. **Search documentation** in this README
+3. **Create a new issue** with detailed information
+4. **Join discussions** for general questions
 
 ---
 
-**⚠️ Security Warning**: This app provides strong encryption, but security also depends on how you handle passwords and share files. Always use secure channels for password sharing and keep your device protected.
+## ⚠️ Important Security Notes
+
+### Production Deployment
+- **HTTPS Only**: Always use HTTPS in production
+- **Server Implementation**: Consider server-side encryption for enhanced security
+- **Regular Updates**: Keep dependencies updated
+- **Security Audits**: Conduct regular security reviews
+
+### User Responsibilities
+- **Strong Passwords**: Use secure passwords for encryption
+- **Secure Sharing**: Share passwords through secure channels
+- **Device Security**: Keep your device locked and secure
+- **Regular Cleanup**: Remove old encrypted files when no longer needed
+
+**🔐 Remember**: This app provides strong encryption, but security also depends on how you handle passwords and share files. Always use secure channels for password sharing and keep your device protected.
