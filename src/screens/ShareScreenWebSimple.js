@@ -94,7 +94,7 @@ export default function ShareScreenWeb() {
         setCurrentShareCode(code);
         setShowSuccessModal(true);
 
-        console.log('File shared with code:', code);
+        console.info('File shared successfully');
       } else {
         alert('Error sharing file. Please try again.');
       }

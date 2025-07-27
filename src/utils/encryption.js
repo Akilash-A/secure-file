@@ -99,25 +99,55 @@ export const decryptData = async (encryptedData, key, iv) => {
 // Generate a secure password
 export const generateSecurePassword = async (length = 16) => {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-  const randomBytes = await Crypto.getRandomBytesAsync(length);
   
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += charset[randomBytes[i] % charset.length];
+  // Use crypto-secure random generation
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const randomValues = new Uint8Array(length);
+    crypto.getRandomValues(randomValues);
+    
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += charset[randomValues[i] % charset.length];
+    }
+    
+    return password;
+  } else {
+    // Fallback for React Native
+    const randomBytes = await Crypto.getRandomBytesAsync(length);
+    
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += charset[randomBytes[i] % charset.length];
+    }
+    
+    return password;
   }
-  
-  return password;
 };
 
 // Generate a unique share code (4-5 character alphanumeric)
 export const generateShareCode = async (length = 5) => {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const randomBytes = await Crypto.getRandomBytesAsync(length);
   
-  let code = '';
-  for (let i = 0; i < length; i++) {
-    code += charset[randomBytes[i] % charset.length];
+  // Use crypto-secure random generation
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const randomValues = new Uint8Array(length);
+    crypto.getRandomValues(randomValues);
+    
+    let code = '';
+    for (let i = 0; i < length; i++) {
+      code += charset[randomValues[i] % charset.length];
+    }
+    
+    return code;
+  } else {
+    // Fallback for environments without Web Crypto API
+    const randomBytes = await Crypto.getRandomBytesAsync(length);
+    
+    let code = '';
+    for (let i = 0; i < length; i++) {
+      code += charset[randomBytes[i] % charset.length];
+    }
+    
+    return code;
   }
-  
-  return code;
 };

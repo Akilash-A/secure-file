@@ -63,7 +63,7 @@ class SharedFileStorage {
       this.files.set(code, storedFile);
       this.saveToStorage();
       
-      console.log(`File stored with code: ${code}`);
+      console.info('File stored successfully');
       return true;
     } catch (error) {
       console.error('Error storing file:', error);
@@ -88,7 +88,7 @@ class SharedFileStorage {
       this.files.set(code, storedFile);
       this.saveToStorage();
       
-      console.log(`Encrypted file stored with code: ${code}`);
+      console.info('Encrypted file stored successfully');
       return true;
     } catch (error) {
       console.error('Error storing encrypted file:', error);
@@ -210,7 +210,7 @@ class SharedFileStorage {
     
     if (cleanedCount > 0) {
       this.saveToStorage();
-      console.log(`Cleaned up ${cleanedCount} expired files`);
+      console.info(`Cleaned up ${cleanedCount} expired files`);
     }
     
     return cleanedCount;

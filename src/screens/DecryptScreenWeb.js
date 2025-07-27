@@ -12,10 +12,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { validateShareCode, validateFileName, sanitizeString } from '../utils/validation';
+import { initializeSecurity } from '../utils/security';
 
 const DecryptScreenWeb = () => {
   const { theme } = useTheme();
   const [selectedFile, setSelectedFile] = useState(null);
+  const [userEnteredPassword, setUserEnteredPassword] = useState('');
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [decryptionProgress, setDecryptionProgress] = useState(0);
   const [decryptedFile, setDecryptedFile] = useState(null);
@@ -143,13 +146,8 @@ const DecryptScreenWeb = () => {
         isTextFile: mimeType.startsWith('text/') || originalName.match(/\.(txt|md|json|csv|xml|html|css|js|ts|log)$/i)
       };
       
-      console.log('Decryption complete:', {
-        originalName,
-        mimeType,
-        size: decryptedData.length,
-        isTextFile: decrypted.isTextFile,
-        firstBytes: Array.from(decryptedData.slice(0, 20)).map(b => b.toString(16)).join(' ')
-      });
+      // Log success without sensitive data
+      console.info('File decryption completed successfully');
       
       setDecryptedFile(decrypted);
       setIsDecrypting(false);
@@ -172,7 +170,8 @@ const DecryptScreenWeb = () => {
         try {
           return await performWebCryptoDecryption(uint8Array);
         } catch (error) {
-          console.log('Web Crypto decryption failed, trying fallback:', error);
+          // Log error without exposing sensitive details
+          console.error('Web Crypto decryption failed, trying fallback');
         }
       }
       
@@ -220,13 +219,27 @@ const DecryptScreenWeb = () => {
     return new Uint8Array(decryptedData);
   };
 
-  // Fallback simple XOR decryption
+  // Fallback simple XOR decryption - Note: This is insecure and should not be used in production
   const performSimpleDecryption = (encryptedData) => {
-    const key = 'MySecretKey123!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    // Generate a secure key from user input instead of hardcoded key
+    if (!userEnteredPassword) {
+      throw new Error('Password required for decryption');
+    }
+    
+    // Use a more secure approach - derive key from password
+    const encoder = new TextEncoder();
+    const passwordBytes = encoder.encode(userEnteredPassword);
+    const keyMaterial = new Uint8Array(64); // Extend key material
+    
+    // Create extended key from password
+    for (let i = 0; i < keyMaterial.length; i++) {
+      keyMaterial[i] = passwordBytes[i % passwordBytes.length] ^ (i * 137); // Prime number for better distribution
+    }
+    
     const decryptedArray = new Uint8Array(encryptedData.length);
     
     for (let i = 0; i < encryptedData.length; i++) {
-      decryptedArray[i] = encryptedData[i] ^ key.charCodeAt(i % key.length);
+      decryptedArray[i] = encryptedData[i] ^ keyMaterial[i % keyMaterial.length];
     }
     
     return decryptedArray;
@@ -338,7 +351,8 @@ const DecryptScreenWeb = () => {
   const previewDecryptedFile = () => {
     if (!decryptedFile) return;
     
-    console.log('Preview attempt for:', decryptedFile.name, 'Type:', decryptedFile.type);
+    // Log preview attempt without sensitive file details
+    console.info('Attempting to preview decrypted file');
     
     // For text files, show a preview
     if (decryptedFile.type.startsWith('text/') || 
@@ -357,14 +371,14 @@ const DecryptScreenWeb = () => {
         try {
           text = new TextDecoder('utf-8').decode(decryptedFile.decryptedData);
         } catch (error) {
-          console.log('UTF-8 decode failed, trying latin1:', error);
+          console.error('UTF-8 decode failed, trying latin1 encoding');
           // Fallback to latin1 for some files
           const bytes = Array.from(decryptedFile.decryptedData);
           text = bytes.map(byte => String.fromCharCode(byte)).join('');
         }
         
-        console.log('Decoded text length:', text.length);
-        console.log('First 100 chars:', text.substring(0, 100));
+        // Log success without exposing content
+        console.info('Text file decoded successfully, length:', text.length);
         
         // Check if the text contains mostly printable characters
         const printableChars = text.replace(/[\x00-\x1F\x7F-\x9F]/g, '').length;
@@ -377,10 +391,10 @@ const DecryptScreenWeb = () => {
           throw new Error('File content is not readable text');
         }
       } catch (error) {
-        console.log('Text preview failed:', error);
+        console.error('Text preview failed');
         Alert.alert(
           'Preview Not Available', 
-          `Cannot preview ${decryptedFile.name}.\n\nThis might be a binary file or the content is not in a readable text format.\n\nError: ${error.message}`,
+          `Cannot preview ${decryptedFile.name}.\n\nThis might be a binary file or the content is not in a readable text format.`,
           [
             { text: 'Cancel', style: 'cancel' },
             { text: 'Download Anyway', onPress: downloadDecryptedFile }

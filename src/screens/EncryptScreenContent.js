@@ -54,11 +54,26 @@ export default function EncryptScreenContent() {
 
   const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let result = '';
-    for (let i = 0; i < 16; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    const length = 16;
+    
+    // Use crypto-secure random generation
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const randomValues = new Uint8Array(length);
+      crypto.getRandomValues(randomValues);
+      
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(randomValues[i] % chars.length);
+      }
+      setPassword(result);
+    } else {
+      // Fallback for environments without crypto.getRandomValues
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      setPassword(result);
     }
-    setPassword(result);
   };
 
   const encryptFile = async () => {

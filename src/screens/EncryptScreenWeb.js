@@ -180,22 +180,15 @@ const EncryptScreenWeb = () => {
     }
   };
 
-  // Fallback simple encryption
+  // Fallback simple encryption - Note: This is insecure and should not be used in production
   const performSimpleEncryption = (data) => {
-    const key = 'MySecretKey123!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const uint8Array = new Uint8Array(data);
-    const encryptedArray = new Uint8Array(uint8Array.length);
-    
-    for (let i = 0; i < uint8Array.length; i++) {
-      encryptedArray[i] = uint8Array[i] ^ key.charCodeAt(i % key.length);
-    }
-    
-    return encryptedArray;
+    // This method should be replaced with proper encryption in production
+    // For now, throw an error to force use of Web Crypto API
+    throw new Error('Fallback encryption not available. Please use a modern browser with Web Crypto API support.');
   };
 
   const generateShareCode = async () => {
-    console.log('generateShareCode called');
-    console.log('encryptedFile:', encryptedFile);
+    console.info('Generating share code...');
     
     if (!encryptedFile) {
       Alert.alert('Error', 'No encrypted file available. Please encrypt a file first.');
@@ -207,14 +200,17 @@ const EncryptScreenWeb = () => {
       return;
     }
 
-    // Generate a unique 8-character code
+    // Generate a cryptographically secure 8-character code
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const randomValues = new Uint8Array(8);
+    crypto.getRandomValues(randomValues);
+    
     let code = '';
     for (let i = 0; i < 8; i++) {
-      code += characters.charAt(Math.floor(Math.random() * characters.length));
+      code += characters.charAt(randomValues[i] % characters.length);
     }
 
-    console.log('Generated code:', code);
+    console.info('Generated secure share code');
 
     try {
       // Calculate expiry date based on selected time
@@ -231,12 +227,12 @@ const EncryptScreenWeb = () => {
       
       const expiryDate = new Date(getExpiryTime(selectedDeleteTime));
       
-      console.log('Converting blob to base64...');
+      console.info('Converting file for storage...');
       // Convert the encrypted file blob to base64
       const arrayBuffer = await encryptedFile.blob.arrayBuffer();
       const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       
-      console.log('Storing encrypted file...');
+      console.info('Storing encrypted file...');
       const success = await sharedFileStorage.storeEncryptedFile(
         code,
         base64Data,
@@ -244,7 +240,7 @@ const EncryptScreenWeb = () => {
         expiryDate
       );
 
-      console.log('Storage success:', success);
+      console.info('File storage completed');
 
       if (success) {
         setShareCode(code);
@@ -506,7 +502,7 @@ const EncryptScreenWeb = () => {
                   marginLeft: 8,
                 }]}
                 onPress={() => {
-                  console.log('Share button clicked!');
+                  console.info('Generating share code...');
                   generateShareCode();
                 }}
               >
